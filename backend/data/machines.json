@@ -1,0 +1,1602 @@
+[
+    {
+        "id": 1,
+        "machine_id": "M001",
+        "machine_name": "Machine-001",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-01",
+        "installation_date": "2025-05-20",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 2,
+        "machine_id": "M002",
+        "machine_name": "Machine-002",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-02",
+        "installation_date": "2025-03-20",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 3,
+        "machine_id": "M003",
+        "machine_name": "Machine-003",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-03",
+        "installation_date": "2025-06-04",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 4,
+        "machine_id": "M004",
+        "machine_name": "Machine-004",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-04",
+        "installation_date": "2025-05-06",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 5,
+        "machine_id": "M005",
+        "machine_name": "Machine-005",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-05",
+        "installation_date": "2025-01-17",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 6,
+        "machine_id": "M006",
+        "machine_name": "Machine-006",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-06",
+        "installation_date": "2025-06-25",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 7,
+        "machine_id": "M007",
+        "machine_name": "Machine-007",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-07",
+        "installation_date": "2025-05-18",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 8,
+        "machine_id": "M008",
+        "machine_name": "Machine-008",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-08",
+        "installation_date": "2025-05-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 9,
+        "machine_id": "M009",
+        "machine_name": "Machine-009",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-09",
+        "installation_date": "2025-01-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 10,
+        "machine_id": "M010",
+        "machine_name": "Machine-010",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-10",
+        "installation_date": "2025-03-23",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 11,
+        "machine_id": "M011",
+        "machine_name": "Machine-011",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-11",
+        "installation_date": "2025-03-08",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 12,
+        "machine_id": "M012",
+        "machine_name": "Machine-012",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-12",
+        "installation_date": "2025-06-16",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 13,
+        "machine_id": "M013",
+        "machine_name": "Machine-013",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-13",
+        "installation_date": "2025-04-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 14,
+        "machine_id": "M014",
+        "machine_name": "Machine-014",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-14",
+        "installation_date": "2025-05-29",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 15,
+        "machine_id": "M015",
+        "machine_name": "Machine-015",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-15",
+        "installation_date": "2025-03-21",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 16,
+        "machine_id": "M016",
+        "machine_name": "Machine-016",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-16",
+        "installation_date": "2025-02-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 17,
+        "machine_id": "M017",
+        "machine_name": "Machine-017",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-17",
+        "installation_date": "2025-04-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 18,
+        "machine_id": "M018",
+        "machine_name": "Machine-018",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-18",
+        "installation_date": "2025-01-12",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 19,
+        "machine_id": "M019",
+        "machine_name": "Machine-019",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-19",
+        "installation_date": "2025-05-29",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 20,
+        "machine_id": "M020",
+        "machine_name": "Machine-020",
+        "family": "Industrial Electric Motors",
+        "series": "EM-500",
+        "model": "EM-500-20",
+        "installation_date": "2025-04-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 21,
+        "machine_id": "M021",
+        "machine_name": "Machine-021",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-01",
+        "installation_date": "2025-05-17",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 22,
+        "machine_id": "M022",
+        "machine_name": "Machine-022",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-02",
+        "installation_date": "2025-03-05",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 23,
+        "machine_id": "M023",
+        "machine_name": "Machine-023",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-03",
+        "installation_date": "2025-06-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 24,
+        "machine_id": "M024",
+        "machine_name": "Machine-024",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-04",
+        "installation_date": "2025-06-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 25,
+        "machine_id": "M025",
+        "machine_name": "Machine-025",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-05",
+        "installation_date": "2025-05-21",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 26,
+        "machine_id": "M026",
+        "machine_name": "Machine-026",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-06",
+        "installation_date": "2025-02-05",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 27,
+        "machine_id": "M027",
+        "machine_name": "Machine-027",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-07",
+        "installation_date": "2025-03-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 28,
+        "machine_id": "M028",
+        "machine_name": "Machine-028",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-08",
+        "installation_date": "2025-01-08",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 29,
+        "machine_id": "M029",
+        "machine_name": "Machine-029",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-09",
+        "installation_date": "2025-01-28",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 30,
+        "machine_id": "M030",
+        "machine_name": "Machine-030",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-10",
+        "installation_date": "2025-05-03",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 31,
+        "machine_id": "M031",
+        "machine_name": "Machine-031",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-11",
+        "installation_date": "2025-05-15",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 32,
+        "machine_id": "M032",
+        "machine_name": "Machine-032",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-12",
+        "installation_date": "2025-06-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 33,
+        "machine_id": "M033",
+        "machine_name": "Machine-033",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-13",
+        "installation_date": "2025-02-28",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 34,
+        "machine_id": "M034",
+        "machine_name": "Machine-034",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-14",
+        "installation_date": "2025-03-08",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 35,
+        "machine_id": "M035",
+        "machine_name": "Machine-035",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-15",
+        "installation_date": "2025-03-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 36,
+        "machine_id": "M036",
+        "machine_name": "Machine-036",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-16",
+        "installation_date": "2025-02-04",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 37,
+        "machine_id": "M037",
+        "machine_name": "Machine-037",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-17",
+        "installation_date": "2025-01-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 38,
+        "machine_id": "M038",
+        "machine_name": "Machine-038",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-18",
+        "installation_date": "2025-03-27",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 39,
+        "machine_id": "M039",
+        "machine_name": "Machine-039",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-19",
+        "installation_date": "2025-02-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 40,
+        "machine_id": "M040",
+        "machine_name": "Machine-040",
+        "family": "Centrifugal Pumps",
+        "series": "CP-200",
+        "model": "CP-200-20",
+        "installation_date": "2025-05-01",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 41,
+        "machine_id": "M041",
+        "machine_name": "Machine-041",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-01",
+        "installation_date": "2025-03-20",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 42,
+        "machine_id": "M042",
+        "machine_name": "Machine-042",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-02",
+        "installation_date": "2025-05-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 43,
+        "machine_id": "M043",
+        "machine_name": "Machine-043",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-03",
+        "installation_date": "2025-05-07",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 44,
+        "machine_id": "M044",
+        "machine_name": "Machine-044",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-04",
+        "installation_date": "2025-02-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 45,
+        "machine_id": "M045",
+        "machine_name": "Machine-045",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-05",
+        "installation_date": "2025-05-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 46,
+        "machine_id": "M046",
+        "machine_name": "Machine-046",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-06",
+        "installation_date": "2025-05-25",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 47,
+        "machine_id": "M047",
+        "machine_name": "Machine-047",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-07",
+        "installation_date": "2025-03-11",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 48,
+        "machine_id": "M048",
+        "machine_name": "Machine-048",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-08",
+        "installation_date": "2025-02-21",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 49,
+        "machine_id": "M049",
+        "machine_name": "Machine-049",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-09",
+        "installation_date": "2025-05-03",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 50,
+        "machine_id": "M050",
+        "machine_name": "Machine-050",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-10",
+        "installation_date": "2025-01-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 51,
+        "machine_id": "M051",
+        "machine_name": "Machine-051",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-11",
+        "installation_date": "2025-02-05",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 52,
+        "machine_id": "M052",
+        "machine_name": "Machine-052",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-12",
+        "installation_date": "2025-01-02",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 53,
+        "machine_id": "M053",
+        "machine_name": "Machine-053",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-13",
+        "installation_date": "2025-05-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 54,
+        "machine_id": "M054",
+        "machine_name": "Machine-054",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-14",
+        "installation_date": "2025-04-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 55,
+        "machine_id": "M055",
+        "machine_name": "Machine-055",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-15",
+        "installation_date": "2025-05-07",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 56,
+        "machine_id": "M056",
+        "machine_name": "Machine-056",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-16",
+        "installation_date": "2025-05-21",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 57,
+        "machine_id": "M057",
+        "machine_name": "Machine-057",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-17",
+        "installation_date": "2025-03-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 58,
+        "machine_id": "M058",
+        "machine_name": "Machine-058",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-18",
+        "installation_date": "2025-04-13",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 59,
+        "machine_id": "M059",
+        "machine_name": "Machine-059",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-19",
+        "installation_date": "2025-01-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 60,
+        "machine_id": "M060",
+        "machine_name": "Machine-060",
+        "family": "Rotary Air Compressors",
+        "series": "AC-300",
+        "model": "AC-300-20",
+        "installation_date": "2025-01-21",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 61,
+        "machine_id": "M061",
+        "machine_name": "Machine-061",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-01",
+        "installation_date": "2025-05-01",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 62,
+        "machine_id": "M062",
+        "machine_name": "Machine-062",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-02",
+        "installation_date": "2025-03-26",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 63,
+        "machine_id": "M063",
+        "machine_name": "Machine-063",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-03",
+        "installation_date": "2025-04-12",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 64,
+        "machine_id": "M064",
+        "machine_name": "Machine-064",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-04",
+        "installation_date": "2025-05-18",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 65,
+        "machine_id": "M065",
+        "machine_name": "Machine-065",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-05",
+        "installation_date": "2025-04-25",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 66,
+        "machine_id": "M066",
+        "machine_name": "Machine-066",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-06",
+        "installation_date": "2025-04-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 67,
+        "machine_id": "M067",
+        "machine_name": "Machine-067",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-07",
+        "installation_date": "2025-04-11",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 68,
+        "machine_id": "M068",
+        "machine_name": "Machine-068",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-08",
+        "installation_date": "2025-02-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 69,
+        "machine_id": "M069",
+        "machine_name": "Machine-069",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-09",
+        "installation_date": "2025-01-06",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 70,
+        "machine_id": "M070",
+        "machine_name": "Machine-070",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-10",
+        "installation_date": "2025-03-20",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 71,
+        "machine_id": "M071",
+        "machine_name": "Machine-071",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-11",
+        "installation_date": "2025-02-08",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 72,
+        "machine_id": "M072",
+        "machine_name": "Machine-072",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-12",
+        "installation_date": "2025-03-15",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 73,
+        "machine_id": "M073",
+        "machine_name": "Machine-073",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-13",
+        "installation_date": "2025-06-03",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 74,
+        "machine_id": "M074",
+        "machine_name": "Machine-074",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-14",
+        "installation_date": "2025-02-12",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 75,
+        "machine_id": "M075",
+        "machine_name": "Machine-075",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-15",
+        "installation_date": "2025-01-11",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 76,
+        "machine_id": "M076",
+        "machine_name": "Machine-076",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-16",
+        "installation_date": "2025-02-20",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 77,
+        "machine_id": "M077",
+        "machine_name": "Machine-077",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-17",
+        "installation_date": "2025-02-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 78,
+        "machine_id": "M078",
+        "machine_name": "Machine-078",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-18",
+        "installation_date": "2025-04-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 79,
+        "machine_id": "M079",
+        "machine_name": "Machine-079",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-19",
+        "installation_date": "2025-04-11",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 80,
+        "machine_id": "M080",
+        "machine_name": "Machine-080",
+        "family": "Hydraulic Power Units",
+        "series": "HP-400",
+        "model": "HP-400-20",
+        "installation_date": "2025-05-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 81,
+        "machine_id": "M081",
+        "machine_name": "Machine-081",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-01",
+        "installation_date": "2025-04-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 82,
+        "machine_id": "M082",
+        "machine_name": "Machine-082",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-02",
+        "installation_date": "2025-03-15",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 83,
+        "machine_id": "M083",
+        "machine_name": "Machine-083",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-03",
+        "installation_date": "2025-05-27",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 84,
+        "machine_id": "M084",
+        "machine_name": "Machine-084",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-04",
+        "installation_date": "2025-01-31",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 85,
+        "machine_id": "M085",
+        "machine_name": "Machine-085",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-05",
+        "installation_date": "2025-01-05",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 86,
+        "machine_id": "M086",
+        "machine_name": "Machine-086",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-06",
+        "installation_date": "2025-01-17",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 87,
+        "machine_id": "M087",
+        "machine_name": "Machine-087",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-07",
+        "installation_date": "2025-05-11",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 88,
+        "machine_id": "M088",
+        "machine_name": "Machine-088",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-08",
+        "installation_date": "2025-03-25",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 89,
+        "machine_id": "M089",
+        "machine_name": "Machine-089",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-09",
+        "installation_date": "2025-01-30",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 90,
+        "machine_id": "M090",
+        "machine_name": "Machine-090",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-10",
+        "installation_date": "2025-04-01",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 91,
+        "machine_id": "M091",
+        "machine_name": "Machine-091",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-11",
+        "installation_date": "2025-01-28",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 92,
+        "machine_id": "M092",
+        "machine_name": "Machine-092",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-12",
+        "installation_date": "2025-05-06",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 93,
+        "machine_id": "M093",
+        "machine_name": "Machine-093",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-13",
+        "installation_date": "2025-03-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 94,
+        "machine_id": "M094",
+        "machine_name": "Machine-094",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-14",
+        "installation_date": "2025-03-10",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 95,
+        "machine_id": "M095",
+        "machine_name": "Machine-095",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-15",
+        "installation_date": "2025-02-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 96,
+        "machine_id": "M096",
+        "machine_name": "Machine-096",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-16",
+        "installation_date": "2025-04-24",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 97,
+        "machine_id": "M097",
+        "machine_name": "Machine-097",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-17",
+        "installation_date": "2025-03-07",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 98,
+        "machine_id": "M098",
+        "machine_name": "Machine-098",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-18",
+        "installation_date": "2025-01-16",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 99,
+        "machine_id": "M099",
+        "machine_name": "Machine-099",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-19",
+        "installation_date": "2025-01-22",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    },
+    {
+        "id": 100,
+        "machine_id": "M100",
+        "machine_name": "Machine-100",
+        "family": "Industrial Ventilation Fans",
+        "series": "VF-150",
+        "model": "VF-150-20",
+        "installation_date": "2025-06-23",
+        "sensor_configuration": [
+            "Temperature",
+            "Rotational Speed",
+            "Vibration",
+            "Pressure",
+            "Current"
+        ]
+    }
+]

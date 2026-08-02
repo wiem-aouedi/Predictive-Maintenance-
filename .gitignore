@@ -1,0 +1,32 @@
+# Secrets — never commit
+.env
+.env.local
+*service_role*
+*secret_key*
+
+# Python environment
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+
+node_modules/
+# Jupyter
+.ipynb_checkpoints/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Large raw data exports (keep the Supabase data itself in Supabase, not in git)
+*.csv
+data/raw/
+
+# Build output
+frontend/dist/
+dist/
+
+# Model artifacts (only add this if you actually don't want xgb_weighted_v1.pkl tracked — 
+# otherwise skip, since you likely want that one in the repo)

@@ -1,0 +1,25 @@
+# MCP Framework
+fastmcp
+
+# Database
+supabase
+python-dotenv
+
+# Data Processing
+pandas
+numpy
+matplotlib
+seaborn
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+joblib
+
+# Validation
+pydantic
+
+# HTTP Client
+httpx
+groq
+streamlit

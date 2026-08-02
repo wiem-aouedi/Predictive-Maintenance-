@@ -1,0 +1,18 @@
+{
+    "company": "Atlas Industrial Manufacturing",
+    "abbreviation": "AIM",
+    "plant": "Production Plant A",
+    "location": "Tunis Industrial Zone",
+    "industry": "Precision Mechanical Manufacturing",
+    "operation": "24/7",
+    "maintenance_strategy": "Predictive Maintenance",
+    "monitoring_frequency": "Hourly",
+    "total_machines": 100,
+    "sensors": [
+        "Temperature",
+        "Vibration",
+        "Pressure",
+        "Rotational Speed",
+        "Current"
+    ]
+}
