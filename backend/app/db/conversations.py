@@ -28,6 +28,10 @@ def update_conversation(conversation_id: str, messages: list, display: list, tit
     supabase.table(TABLE).update(payload).eq("id", conversation_id).execute()
 
 
+def delete_conversation(conversation_id: str) -> None:
+    supabase.table(TABLE).delete().eq("id", conversation_id).execute()
+
+
 def list_conversations(limit: int = 50) -> list[dict]:
     resp = (
         supabase.table(TABLE)

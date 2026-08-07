@@ -1,11 +1,47 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --color-canvas: #f5f7fa;
+  --color-ink: #101b31;
+  --color-muted: #5b6b8c;
+  --color-accent: #2451d6;
+  --color-accent-dark: #0b1730;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
 }
+
+.font-mono-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+button,
+a,
+select {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
+    box-shadow 150ms ease, transform 150ms ease;
+}
+
+.rounded-xl.border.border-blue-100.bg-white {
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.rounded-xl.border.border-blue-100.bg-white:hover {
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
+  transform: translateY(-2px);
+}
+
 .markdown-body p {
   margin: 0 0 0.75em 0;
 }
@@ -41,6 +77,7 @@ body {
   padding: 0.1em 0.35em;
   border-radius: 0.25em;
   font-size: 0.85em;
+  font-family: var(--font-mono);
 }
 .markdown-body pre {
   background: #0f172a;
@@ -49,6 +86,7 @@ body {
   border-radius: 0.5em;
   overflow-x: auto;
   margin: 0.5em 0;
+  font-family: var(--font-mono);
 }
 .markdown-body pre code {
   background: transparent;
@@ -81,17 +119,20 @@ body {
   color: #475569;
   margin: 0.5em 0;
 }
-button,
-a,
-select {
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
-    box-shadow 150ms ease, transform 150ms ease;
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-slide {
+  animation: fadeSlideIn 450ms ease;
 }
 
-.rounded-xl.border.border-blue-100.bg-white {
-  transition: box-shadow 200ms ease, transform 200ms ease;
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 700ms ease, transform 700ms ease;
 }
-.rounded-xl.border.border-blue-100.bg-white:hover {
-  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
-  transform: translateY(-2px);
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }

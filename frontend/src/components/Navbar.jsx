@@ -49,12 +49,12 @@ function StatusIndicator() {
   const current = styles[status]
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-blue-800 bg-blue-950/60 px-3 py-1.5">
+    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
       <span className="relative flex h-2 w-2">
         <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${current.dot} opacity-75`} />
         <span className={`relative inline-flex h-2 w-2 rounded-full ${current.dot}`} />
       </span>
-      <span className={`text-xs font-medium ${current.text}`}>{current.label}</span>
+      <span className={`font-mono-data text-xs font-medium ${current.text}`}>{current.label}</span>
     </div>
   )
 }
@@ -63,15 +63,15 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-blue-900 bg-blue-950/95 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-accent-dark/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
             <Activity className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-white">Predictive Maintenance</p>
-            <p className="text-xs text-blue-300">Cognitive Digital Twin Platform</p>
+            <p className="font-display text-sm font-semibold text-white">Predictive Maintenance</p>
+            <p className="text-xs text-white/50">Beyond the Forecast</p>
           </div>
         </div>
 
@@ -82,10 +82,10 @@ export default function Navbar() {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${
                   isActive
-                    ? 'bg-blue-700 text-white'
-                    : 'text-blue-200 hover:bg-blue-900 hover:text-white'
+                    ? 'bg-accent text-white'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
@@ -102,7 +102,7 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setMobileOpen((prev) => !prev)}
-          className="inline-flex items-center justify-center rounded-md p-2 text-blue-200 hover:bg-blue-900 hover:text-white md:hidden"
+          className="inline-flex items-center justify-center rounded-md p-2 text-white/60 hover:bg-white/5 hover:text-white md:hidden"
           aria-label="Toggle navigation menu"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -110,7 +110,7 @@ export default function Navbar() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-blue-900 bg-blue-950 px-4 pb-4 pt-2 md:hidden">
+        <div className="border-t border-white/10 bg-accent-dark px-4 pb-4 pt-2 md:hidden">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map(({ to, label, icon: Icon, end }) => (
               <NavLink
@@ -119,10 +119,10 @@ export default function Navbar() {
                 end={end}
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${
                     isActive
-                      ? 'bg-blue-700 text-white'
-                      : 'text-blue-200 hover:bg-blue-900 hover:text-white'
+                      ? 'bg-accent text-white'
+                      : 'text-white/60 hover:bg-white/5 hover:text-white'
                   }`
                 }
               >

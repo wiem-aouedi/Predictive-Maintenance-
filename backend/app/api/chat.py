@@ -42,7 +42,12 @@ async def chat(req: ChatRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=_describe_exception(e))
 
-    full_messages.extend(new_messages)
+    # Only persist the final answer into history that future turns will
+    # replay. new_messages may contain intermediate tool_call/tool-result
+    # plumbing from this turn's reasoning -- that already did its job
+    # producing `answer`; keeping it in full_messages forever means every
+    # future turn re-sends it to Gemini, growing prompt size every turn.
+    full_messages.append({"role": "assistant", "content": answer})
 
     display.append({
         "id": str(uuid.uuid4()),

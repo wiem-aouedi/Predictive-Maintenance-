@@ -1,9 +1,11 @@
 from typing import Any
-
+from datetime import datetime, timezone
+import pandas as pd
 import mcp
 from ML.predictor import predict_from_sensor_history
 from ML.analysis import compute_sensor_trends
 from database.supabase_client import (
+    fetch_machine_recent_history,
     fetch_machines,
     fetch_machine,
     fetch_machine_sensor_history,
@@ -15,9 +17,22 @@ from database.supabase_client import (
     fetch_machine_specifications,
     fetch_maintenance_tasks,
     fetch_sensor_specifications,
-    fetch_spare_parts
-    
+    fetch_spare_parts,
 )
+
+
+def _resolve_timestamp(as_of_timestamp: str | None) -> str:
+    """
+    Resolve an optional as_of_timestamp to a concrete ISO 8601 string.
+
+    If the caller (LLM) doesn't supply a timestamp, default to the current
+    real-world UTC time. Centralizing this here means every live-fleet tool
+    behaves consistently, and the LLM no longer needs to burn tool calls
+    figuring out "what time is it" before it can ask a real question.
+    """
+    if as_of_timestamp is not None:
+        return as_of_timestamp
+    return datetime.now(timezone.utc).isoformat()
 
 
 def register_tools(mcp):
@@ -102,7 +117,9 @@ def register_tools(mcp):
             return {"error": str(e)}
 
     @mcp.tool()
-    def list_machines_by_status(status: str, as_of_timestamp: str) -> list[dict[str, Any]]:
+    def list_machines_by_status(
+        status: str, as_of_timestamp: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         Return machines whose status, as of a given point in time, matches `status`.
 
@@ -112,22 +129,26 @@ def register_tools(mcp):
 
         Args:
             status: The status to filter by (e.g. "healthy", "warning","critical", "failed").
-            as_of_timestamp: ISO 8601 timestamp defining "now" for this query
-                (e.g. "2025-08-01 00:00:00").
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now" for this
+                query (e.g. "2025-08-01 00:00:00"). Omit this for "right now" /
+                live fleet questions -- it defaults to the current time
+                automatically. Only pass it explicitly when asking about a
+                specific past moment.
 
         Returns:
             A list of dictionaries with machine metadata plus status_as_of and
             degradation_as_of at the given timestamp. Empty list if no matches.
         """
         try:
-            df = fetch_machines_by_status(status, as_of_timestamp)
+            ts = _resolve_timestamp(as_of_timestamp)
+            df = fetch_machines_by_status(status, ts)
             return df.to_dict(orient="records")
 
         except Exception as e:
             return [{"error": str(e)}]
 
     @mcp.tool()
-    def list_failed_machines(as_of_timestamp: str) -> list[dict[str, Any]]:
+    def list_failed_machines(as_of_timestamp: str | None = None) -> list[dict[str, Any]]:
         """
         Return all machines whose status was "failed" as of a given point in time.
 
@@ -136,58 +157,97 @@ def register_tools(mcp):
         are excluded.
 
         Args:
-            as_of_timestamp: ISO 8601 timestamp defining "now" for this query
-                (e.g. "2025-08-01 00:00:00").
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now" for this
+                query (e.g. "2025-08-01 00:00:00"). Omit this for "right now" --
+                it defaults to the current time automatically.
 
         Returns:
             A list of dictionaries with machine metadata for every machine
             that had failed by that point in time. Empty list if none match.
         """
         try:
-            df = fetch_machines_by_status("failed", as_of_timestamp)
+            ts = _resolve_timestamp(as_of_timestamp)
+            df = fetch_machines_by_status("failed", ts)
             return df.to_dict(orient="records")
 
         except Exception as e:
             return [{"error": str(e)}]
 
-
-
-
-
     @mcp.tool()
-    def get_fleet_health_summary(as_of_timestamp: str) -> dict[str, Any]:
+    def get_urgent_machines(as_of_timestamp: str | None = None) -> list[dict[str, Any]]:
         """
-        Return an aggregate summary of the fleet's health as of a given point in time.
+        Return every machine currently in "critical" or "failed" status, in a
+        single call. Use this directly for "which machines need urgent
+        attention" or "any failing machines" style questions instead of
+        checking machines one by one or calling list_machines_by_status twice.
 
         Args:
-            as_of_timestamp: ISO 8601 timestamp defining "now" for this query
-                (e.g. "2025-08-01 00:00:00").
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now" for
+                this query. Omit this for "right now" -- it defaults to the
+                current time automatically.
 
         Returns:
-            A dictionary with total machine count, how many aren't yet installed
-            at that timestamp, and a breakdown of status counts among the rest.
+            A list of dictionaries (machine metadata plus status_as_of and
+            degradation_as_of) for machines in critical or failed status.
+            Empty list if none are urgent.
         """
         try:
-            return fetch_fleet_health_summary(as_of_timestamp)
+            ts = _resolve_timestamp(as_of_timestamp)
+            critical_df = fetch_machines_by_status("critical", ts)
+            failed_df = fetch_machines_by_status("failed", ts)
+
+            if critical_df.empty and failed_df.empty:
+                return []
+
+            combined = pd.concat([critical_df, failed_df], ignore_index=True)
+            return combined.to_dict(orient="records")
+
+        except Exception as e:
+            return [{"error": str(e)}]
+
+    @mcp.tool()
+    def get_fleet_health_summary(as_of_timestamp: str | None = None) -> dict[str, Any]:
+        """
+        Return an aggregate summary of the fleet's health as of a given point
+        in time. Use this for "fleet health summary" / "how's the fleet
+        doing" style questions -- it's a single aggregate call, not something
+        to reconstruct from per-machine lookups.
+
+        Args:
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now" for
+                this query (e.g. "2025-08-01 00:00:00"). Omit this for "right
+                now" / live fleet questions -- it defaults to the current
+                time automatically.
+
+        Returns:
+            A dictionary with total machine count, how many aren't yet
+            installed at that timestamp, and a breakdown of status counts
+            among the rest.
+        """
+        try:
+            ts = _resolve_timestamp(as_of_timestamp)
+            return fetch_fleet_health_summary(ts)
 
         except Exception as e:
             return {"error": str(e)}
-        
+
     @mcp.tool()
-    def analyze_sensor_trends(machine_id: int, window: int = 168, as_of_timestamp: str | None = None) -> dict[str, Any]:
+    def analyze_sensor_trends(
+        machine_id: int, window: int = 168, as_of_timestamp: str | None = None
+    ) -> dict[str, Any]:
         """
-    Analyze whether each sensor is trending up, down, or stable over the
-    most recent readings, to help judge if a machine is actively degrading
-    rather than just relying on a single instantaneous reading.
+        Analyze whether each sensor is trending up, down, or stable over the
+        most recent readings, to help judge if a machine is actively degrading
+        rather than just relying on a single instantaneous reading.
 
-    Args:
-        machine_id: The numeric id of the machine to analyze.
-        window: How many recent readings to include in the trend fit (default 168).
-        as_of_timestamp: Optional point in time to analyze "as of" instead of latest.
+        Args:
+            machine_id: The numeric id of the machine to analyze.
+            window: How many recent readings to include in the trend fit (default 168).
+            as_of_timestamp: Optional point in time to analyze "as of" instead of latest.
 
-    Returns:
-        Per-sensor dict with direction, slope, current value, and window stats.
-    """
+        Returns:
+            Per-sensor dict with direction, slope, current value, and window stats.
+        """
         try:
             df = fetch_machine_full_history(machine_id, as_of_timestamp=as_of_timestamp)
             if df.empty:
@@ -195,11 +255,11 @@ def register_tools(mcp):
             return compute_sensor_trends(df, window=window)
         except Exception as e:
             return {"error": str(e)}
-        
+
     @mcp.tool()
     def predict_failure_next_168h(
         machine_id: int,
-        as_of_timestamp: str,
+        as_of_timestamp: str | None = None,
     ) -> dict[str, Any]:
         """
         Predict whether a machine will fail within the next 168 hours (~7 days),
@@ -211,9 +271,10 @@ def register_tools(mcp):
 
         Args:
             machine_id: The numeric id of the machine.
-            as_of_timestamp: ISO 8601 timestamp (e.g. "2025-08-01 00:00:00") defining
-                the point in time to predict from. Only sensor data at or before this
-                timestamp is used.
+            as_of_timestamp: Optional ISO 8601 timestamp (e.g. "2025-08-01 00:00:00")
+                defining the point in time to predict from. Omit this for "right
+                now" -- it defaults to the current time automatically. Only
+                sensor data at or before this timestamp is used.
 
         Returns:
             A dictionary containing the prediction, probability, threshold,
@@ -223,6 +284,8 @@ def register_tools(mcp):
             be retrieved.
         """
         try:
+            ts = _resolve_timestamp(as_of_timestamp)
+
             live_state = fetch_machine_live_state(machine_id)
             if live_state.empty:
                 return {
@@ -233,11 +296,12 @@ def register_tools(mcp):
             # ------------------------------------------------------------------
             # Retrieve sensor history scoped to the machine's CURRENT life only
             # ------------------------------------------------------------------
-            history = fetch_machine_full_history(
+            history = fetch_machine_recent_history(
                 machine_id,
                 since_timestamp=current_life_install,
-                as_of_timestamp=as_of_timestamp,
-            )
+                as_of_timestamp=ts,
+                    limit=200,
+        )
 
             if history.empty:
                 return {
@@ -256,6 +320,7 @@ def register_tools(mcp):
 
         except Exception as e:
             return {"error": str(e)}
+
     @mcp.tool()
     def get_machine_specifications(machine_id: int) -> dict[str, Any]:
         """

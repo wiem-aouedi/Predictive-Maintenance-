@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.db.conversations import get_conversation, list_conversations
+from app.db.conversations import get_conversation, list_conversations, delete_conversation
 from app.schemas.chat import ConversationSummary, ConversationDetail
 
 router = APIRouter()
@@ -21,3 +21,12 @@ async def get_conversation_detail(conversation_id: str):
         messages=conversation.get("messages") or [],
         display=conversation.get("display") or [],
     )
+
+
+@router.delete("/conversations/{conversation_id}")
+async def delete_conversation_route(conversation_id: str):
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    delete_conversation(conversation_id)
+    return {"deleted": True, "id": conversation_id}

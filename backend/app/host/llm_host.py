@@ -13,8 +13,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]  # adjust if llm_host.py isn't
 load_dotenv()
 
 GEMINI_MODEL = "gemini-3.6-flash"
-MAX_TOOL_ITERATIONS = 8
-MAX_CONTEXT_TURNS = 4
+MAX_TOOL_ITERATIONS = 4
+MAX_CONTEXT_TURNS = 10
 MAX_TOOL_RESULT_CHARS = 4000
 
 SERVER_PARAMS = StdioServerParameters(

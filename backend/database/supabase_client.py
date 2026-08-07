@@ -171,6 +171,47 @@ def fetch_machine(machine_id: int) -> pd.DataFrame:
 
     return pd.DataFrame(response.data)
 
+
+# ----------------------------------------------------------------------
+# Fleet-wide status snapshot (single round trip via Postgres RPC)
+# ----------------------------------------------------------------------
+#
+# NOTE: this requires a Postgres function to exist in Supabase. Run this
+# once in the Supabase SQL editor before using fetch_fleet_status_snapshot:
+#
+#   create or replace function fleet_status_snapshot(as_of timestamptz)
+#   returns table(machine_id int, status text, degradation numeric, ts timestamptz)
+#   language sql stable as $$
+#     select distinct on (machine_id)
+#       machine_id, status, degradation, timestamp as ts
+#     from sensor_data
+#     where timestamp <= as_of
+#     order by machine_id, timestamp desc
+#   $$;
+#
+# Without this function deployed, fetch_fleet_status_snapshot will raise an
+# error from Supabase (function does not exist) -- fetch_fleet_health_summary
+# and fetch_machines_by_status will surface that as {"error": "..."} through
+# the MCP tools rather than silently falling back to the old per-machine loop.
+
+def fetch_fleet_status_snapshot(as_of_timestamp: str) -> pd.DataFrame:
+    """
+    Fetch the latest status/degradation per machine as of a given timestamp,
+    in a single round trip via the fleet_status_snapshot Postgres function.
+
+    Replaces the old approach of looping fetch_machine_sensor_history() once
+    per machine (100+ network round trips for the full fleet) with one RPC
+    call that does the "latest row per machine" aggregation server-side.
+    """
+    response = supabase.rpc(
+        "fleet_status_snapshot", {"as_of": as_of_timestamp}
+    ).execute()
+    df = pd.DataFrame(response.data)
+    if not df.empty:
+        df = df.rename(columns={"ts": "timestamp"})
+    return df
+
+
 #fetch the fleet health summary at a given point in time (as a time_stamp) and return it as a dictionary 
 # with the total number of machines, the number of machines not yet installed, and a dictionary of status counts
 #  (healthy, warning, critical, failed) for the machines that are installed.
@@ -182,23 +223,27 @@ def fetch_fleet_health_summary(as_of_timestamp: str) -> dict:
     Each machine's status is derived from its most recent sensor_data reading
     at or before as_of_timestamp. Machines with no reading yet at that point
     (not yet installed) are excluded from status_counts and reported separately.
+
+    Uses fetch_fleet_status_snapshot (1 RPC round trip) instead of looping
+    per machine.
     """
     machines_df = fetch_machines()
     if machines_df.empty:
         return {"as_of_timestamp": as_of_timestamp, "total_machines": 0, "status_counts": {}}
 
-    status_counts: dict = {}
-    not_yet_installed = 0
+    snapshot_df = fetch_fleet_status_snapshot(as_of_timestamp)
 
-    for machine_id in machines_df["id"]:
-        snapshot = fetch_machine_sensor_history(
-            int(machine_id), limit=1, as_of_timestamp=as_of_timestamp
-        )
-        if snapshot.empty:
-            not_yet_installed += 1
-            continue
-        status = snapshot.iloc[-1]["status"]
-        status_counts[status] = status_counts.get(status, 0) + 1
+    if snapshot_df.empty:
+        return {
+            "as_of_timestamp": as_of_timestamp,
+            "total_machines": len(machines_df),
+            "not_yet_installed": len(machines_df),
+            "status_counts": {},
+        }
+
+    installed_ids = set(snapshot_df["machine_id"])
+    not_yet_installed = len(machines_df) - len(installed_ids)
+    status_counts = snapshot_df["status"].value_counts().to_dict()
 
     return {
         "as_of_timestamp": as_of_timestamp,
@@ -206,6 +251,37 @@ def fetch_fleet_health_summary(as_of_timestamp: str) -> dict:
         "not_yet_installed": not_yet_installed,
         "status_counts": status_counts,
     }
+
+def fetch_machine_recent_history(
+    machine_id: int,
+    since_timestamp: str,
+    as_of_timestamp: str,
+    limit: int = 200,
+) -> pd.DataFrame:
+    """
+    Fetch just enough recent rows to compute features for the LATEST row
+    only -- used by predict_failure_next_168h, which only needs the last
+    row of build_features' output. Bounded below by since_timestamp (the
+    machine's current-life installation) so this never crosses into a
+    previous life's data on a revived machine, and bounded above by
+    as_of_timestamp. 200 rows gives comfortable headroom over the
+    pipeline's deepest lookback (24h rolling window).
+    """
+    response = (
+        supabase.table("sensor_data")
+        .select("*")
+        .eq("machine_id", machine_id)
+        .gte("timestamp", since_timestamp)
+        .lte("timestamp", as_of_timestamp)
+        .order("timestamp", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    df = pd.DataFrame(response.data)
+    if not df.empty:
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df = df.sort_values("timestamp").reset_index(drop=True)
+    return df
 
 #fetch the machines whose status matches the given status at a give timestamp and return as pandas dataframe
 def fetch_machines_by_status(status: str, as_of_timestamp: str) -> pd.DataFrame:
@@ -216,26 +292,32 @@ def fetch_machines_by_status(status: str, as_of_timestamp: str) -> pd.DataFrame:
     machine, since this dataset is a completed run-to-failure simulation).
     Status is instead derived per machine from its most recent sensor_data
     reading at or before as_of_timestamp.
+
+    Uses fetch_fleet_status_snapshot (1 RPC round trip) instead of looping
+    per machine.
     """
     machines_df = fetch_machines()
     if machines_df.empty:
         return pd.DataFrame()
 
-    matches = []
-    for machine_id in machines_df["id"]:
-        snapshot = fetch_machine_sensor_history(
-            int(machine_id), limit=1, as_of_timestamp=as_of_timestamp
-        )
-        if snapshot.empty:
-            continue  # not yet installed as of this timestamp
-        latest = snapshot.iloc[-1]
-        if latest["status"] == status:
-            row = machines_df[machines_df["id"] == machine_id].iloc[0].to_dict()
-            row["status_as_of"] = latest["status"]
-            row["degradation_as_of"] = latest["degradation"]
-            matches.append(row)
+    snapshot_df = fetch_fleet_status_snapshot(as_of_timestamp)
+    if snapshot_df.empty:
+        return pd.DataFrame()
 
-    return pd.DataFrame(matches)
+    matched = snapshot_df[snapshot_df["status"] == status]
+    if matched.empty:
+        return pd.DataFrame()
+
+    matched = matched.rename(
+        columns={
+            "machine_id": "id",
+            "status": "status_as_of",
+            "degradation": "degradation_as_of",
+        }
+    )[["id", "status_as_of", "degradation_as_of"]]
+
+    merged = machines_df.merge(matched, on="id", how="inner")
+    return merged
 
 #insert the model predictions into the predictions table in supabase, in batches of 500 rows at a time
 def insert_predictions(df: pd.DataFrame, batch_size: int = 500) -> None:

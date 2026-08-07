@@ -30,3 +30,4 @@ dist/
 
 # Model artifacts (only add this if you actually don't want xgb_weighted_v1.pkl tracked — 
 # otherwise skip, since you likely want that one in the repo)
+*.log

@@ -12,6 +12,7 @@ import {
   Loader2,
   Plus,
   MessageSquare,
+  Trash2,
   AlertCircle,
   Sparkles,
 } from 'lucide-react'
@@ -66,33 +67,33 @@ function ToolTraceItem({ step }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="overflow-hidden rounded-lg border border-blue-100 bg-blue-50/60">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
       <button
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
       >
-        <span className="flex items-center gap-2 text-xs font-medium text-blue-700">
+        <span className="flex items-center gap-2 text-xs font-medium text-accent">
           <Wrench className="h-3.5 w-3.5" />
-          {step.tool}
+          <span className="font-mono-data">{step.tool}</span>
         </span>
         {expanded ? (
-          <ChevronDown className="h-3.5 w-3.5 text-blue-400" />
+          <ChevronDown className="h-3.5 w-3.5 text-muted" />
         ) : (
-          <ChevronRight className="h-3.5 w-3.5 text-blue-400" />
+          <ChevronRight className="h-3.5 w-3.5 text-muted" />
         )}
       </button>
       {expanded && (
-        <div className="space-y-2 border-t border-blue-100 px-3 py-2">
+        <div className="space-y-2 border-t border-slate-200 px-3 py-2">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-400">Input</p>
-            <pre className="mt-1 overflow-x-auto rounded bg-blue-950 px-2 py-1.5 text-[11px] text-blue-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Input</p>
+            <pre className="mt-1 overflow-x-auto rounded bg-accent-dark px-2 py-1.5 font-mono-data text-[11px] text-white/90">
               {JSON.stringify(step.input, null, 2)}
             </pre>
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-400">Output</p>
-            <pre className="mt-1 max-h-40 overflow-auto rounded bg-blue-950 px-2 py-1.5 text-[11px] text-blue-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Output</p>
+            <pre className="mt-1 max-h-40 overflow-auto rounded bg-accent-dark px-2 py-1.5 font-mono-data text-[11px] text-white/90">
               {typeof step.output === 'string' ? step.output : JSON.stringify(step.output, null, 2)}
             </pre>
           </div>
@@ -112,10 +113,10 @@ function ToolTracePanel({ trace }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-1.5 text-xs font-medium text-blue-500 hover:text-blue-700"
+        className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-accent"
       >
         {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-        {trace.length} tool call{trace.length > 1 ? 's' : ''}
+        <span className="font-mono-data">{trace.length}</span> tool call{trace.length > 1 ? 's' : ''}
       </button>
       {open && (
         <div className="mt-2 space-y-1.5">
@@ -136,7 +137,11 @@ function ChatBubble({ message }) {
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       <div
         className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-          isUser ? 'bg-blue-600' : isError ? 'bg-red-100' : 'bg-blue-100'
+          isUser
+            ? 'bg-accent ring-1 ring-white/20'
+            : isError
+            ? 'bg-red-100 ring-1 ring-red-200'
+            : 'bg-accent/10 ring-1 ring-accent/10'
         }`}
       >
         {isUser ? (
@@ -144,17 +149,17 @@ function ChatBubble({ message }) {
         ) : isError ? (
           <AlertCircle className="h-4 w-4 text-red-600" />
         ) : (
-          <Bot className="h-4 w-4 text-blue-600" />
+          <Bot className="h-4 w-4 text-accent" />
         )}
       </div>
       <div className={`flex max-w-[75%] flex-col ${isUser ? 'items-end' : 'items-start'}`}>
         <div
           className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             isUser
-              ? 'rounded-tr-sm bg-blue-600 text-white'
+              ? 'rounded-tr-sm bg-accent text-white'
               : isError
               ? 'rounded-tl-sm border border-red-200 bg-red-50 text-red-700'
-              : 'rounded-tl-sm border border-blue-100 bg-white text-blue-950 shadow-sm'
+              : 'rounded-tl-sm border border-slate-200 bg-white text-ink shadow-sm'
           }`}
         >
           {isUser || isError ? (
@@ -174,12 +179,12 @@ function ChatBubble({ message }) {
 function TypingIndicator() {
   return (
     <div className="flex gap-3">
-      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-        <Bot className="h-4 w-4 text-blue-600" />
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent/10 ring-1 ring-accent/10">
+        <Bot className="h-4 w-4 text-accent" />
       </div>
-      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm border border-blue-100 bg-white px-4 py-3 shadow-sm">
-        <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
-        <span className="text-xs text-blue-400">Thinking...</span>
+      <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <Loader2 className="h-4 w-4 animate-spin text-accent" />
+        <span className="text-xs text-muted">Thinking...</span>
       </div>
     </div>
   )
@@ -217,9 +222,6 @@ export default function AIAssistantPage() {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [displayMessages, isLoading])
 
-  // Picks up a prefilled question passed via navigate('/assistant', { state: { prefill } })
-  // - used by the Watchlist page's "Ask agent" button. Clears the nav state
-  // afterward so it doesn't reappear on a later back/forward navigation.
   useEffect(() => {
     if (location.state?.prefill) {
       setInputValue(location.state.prefill)
@@ -277,6 +279,25 @@ export default function AIAssistantPage() {
     setInputValue('')
   }
 
+  async function handleDeleteConversation(id, event) {
+    event.stopPropagation()
+    const confirmed = window.confirm('Delete this conversation? This cannot be undone.')
+    if (!confirmed) return
+
+    try {
+      const response = await fetch(`/api/conversations/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        throw new Error(`Backend responded with status ${response.status}`)
+      }
+      if (id === conversationId) {
+        handleNewConversation()
+      }
+      refreshConversationList()
+    } catch (error) {
+      setConversationsError(error.message)
+    }
+  }
+
   function handleKeyDown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
@@ -285,13 +306,13 @@ export default function AIAssistantPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-blue-50/40">
-      <aside className="hidden w-72 flex-shrink-0 flex-col border-r border-blue-100 bg-white sm:flex">
-        <div className="border-b border-blue-100 p-4">
+    <div className="flex h-[calc(100vh-64px)] bg-canvas">
+      <aside className="hidden w-72 flex-shrink-0 flex-col border-r border-slate-200 bg-white sm:flex">
+        <div className="border-b border-slate-200 p-4">
           <button
             type="button"
             onClick={handleNewConversation}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-500"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-accent/90"
           >
             <Plus className="h-4 w-4" />
             New conversation
@@ -300,7 +321,7 @@ export default function AIAssistantPage() {
 
         <div className="flex-1 overflow-y-auto p-2">
           {loadingConversations && (
-            <p className="px-3 py-2 text-xs text-blue-400">Loading conversations...</p>
+            <p className="px-3 py-2 text-xs text-muted">Loading conversations...</p>
           )}
           {conversationsError && !loadingConversations && (
             <p className="px-3 py-2 text-xs text-amber-600">
@@ -308,38 +329,50 @@ export default function AIAssistantPage() {
             </p>
           )}
           {!loadingConversations && !conversationsError && conversations.length === 0 && (
-            <p className="px-3 py-2 text-xs text-blue-400">No conversations yet.</p>
+            <p className="px-3 py-2 text-xs text-muted">No conversations yet.</p>
           )}
           {conversations.map((conversation) => (
-            <button
+            <div
               key={conversation.id}
-              type="button"
-              onClick={() => handleSelectConversation(conversation.id)}
-              className={`mb-1 flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                conversation.id === conversationId
-                  ? 'bg-blue-100 text-blue-900'
-                  : 'text-blue-700 hover:bg-blue-50'
+              className={`group mb-1 flex items-center gap-1 rounded-lg pr-1 ${
+                conversation.id === conversationId ? 'bg-accent/10' : 'hover:bg-slate-50'
               }`}
             >
-              <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-400" />
-              <span className="flex-1 overflow-hidden">
-                <span className="block truncate font-medium">
-                  {conversation.title || 'New conversation'}
+              <button
+                type="button"
+                onClick={() => handleSelectConversation(conversation.id)}
+                className={`flex flex-1 items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm ${
+                  conversation.id === conversationId ? 'text-accent' : 'text-ink'
+                }`}
+              >
+                <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted" />
+                <span className="flex-1 overflow-hidden">
+                  <span className="block truncate font-medium">
+                    {conversation.title || 'New conversation'}
+                  </span>
+                  <span className="font-mono-data block text-xs text-muted">
+                    {formatConversationDate(conversation.updated_at)}
+                  </span>
                 </span>
-                <span className="block text-xs text-blue-400">
-                  {formatConversationDate(conversation.updated_at)}
-                </span>
-              </span>
-            </button>
+              </button>
+              <button
+                type="button"
+                onClick={(event) => handleDeleteConversation(conversation.id, event)}
+                title="Delete conversation"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:bg-red-100 hover:text-red-600 group-hover:opacity-100"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
           ))}
         </div>
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <div className="border-b border-blue-100 bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
-            <h1 className="text-lg font-bold text-blue-950">AI Assistant</h1>
-            <p className="text-xs text-blue-500">
+            <h1 className="font-display text-lg font-bold text-ink">AI Assistant</h1>
+            <p className="text-xs text-muted">
               Agent reasoning over MCP tools backed by live fleet data.
             </p>
           </div>
@@ -349,13 +382,13 @@ export default function AIAssistantPage() {
           <div className="mx-auto max-w-4xl space-y-5">
             {displayMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                  <Sparkles className="h-6 w-6 text-blue-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 ring-1 ring-accent/10">
+                  <Sparkles className="h-6 w-6 text-accent" />
                 </div>
-                <p className="mt-4 text-sm font-medium text-blue-950">
+                <p className="font-display mt-4 text-sm font-medium text-ink">
                   Ask about fleet health, a specific machine, or a failure prediction.
                 </p>
-                <p className="mt-1 text-xs text-blue-400">
+                <p className="mt-1 text-xs text-muted">
                   The assistant will call MCP tools as needed and show its reasoning trace.
                 </p>
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -364,7 +397,7 @@ export default function AIAssistantPage() {
                       key={prompt}
                       type="button"
                       onClick={() => handleSend(prompt)}
-                      className="rounded-full border border-blue-200 bg-white px-3.5 py-1.5 text-xs font-medium text-blue-600 shadow-sm hover:bg-blue-50"
+                      className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-accent shadow-sm hover:bg-accent/5"
                     >
                       {prompt}
                     </button>
@@ -382,7 +415,7 @@ export default function AIAssistantPage() {
           </div>
         </div>
 
-        <div className="border-t border-blue-100 bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
             {displayMessages.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
@@ -392,27 +425,27 @@ export default function AIAssistantPage() {
                     type="button"
                     onClick={() => handleSend(prompt)}
                     disabled={isLoading}
-                    className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-accent hover:bg-accent/5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {prompt}
                   </button>
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2 rounded-xl border border-blue-200 bg-white p-2 shadow-sm focus-within:border-blue-400">
+            <div className="flex items-end gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20">
               <textarea
                 value={inputValue}
                 onChange={(event) => setInputValue(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about fleet health, a specific machine, or a failure prediction..."
                 rows={1}
-                className="max-h-32 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm text-blue-950 placeholder:text-blue-300 focus:outline-none"
+                className="max-h-32 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-slate-400 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => handleSend(inputValue)}
                 disabled={isLoading || !inputValue.trim()}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-200"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-accent text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-slate-200"
               >
                 <Send className="h-4 w-4" />
               </button>
