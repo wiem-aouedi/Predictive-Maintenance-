@@ -23,17 +23,17 @@ This project tests whether combining the two : a trained classifier for the *pre
 ## Architecture overview
 
 ```
-┌─────────────────────┐        ┌──────────────────────────┐        ┌────────────────────┐
-│   Simulator          │──────▶│   Supabase (Postgres)      │◀──────│   MCP Server         │
-│  (Fleet A + Fleet B)  │        │  sensor_data, machines,    │        │  tools / resources / │
-│  synthetic sensor data│        │  machine_live_state,       │        │  prompts             │
-└─────────────────────┘        │  knowledge base tables     │        └─────────┬──────────┘
+┌─────────────────────┐         ┌──────────────────────────┐        ┌────────────────────┐
+│   Simulator          │──────▶│   Supabase (Postgres)     │◀──────│   MCP Server         │
+│  (Fleet A + Fleet B)  │       │  sensor_data, machines,   │        │  tools / resources / │
+│  synthetic sensor data│       │  machine_live_state,      │        │  prompts             │
+└─────────────────────┘        │ knowledge base tables     │        └─────────┬──────────┘
                                  └──────────────────────────┘                  │
                                             ▲                                  ▼
-                                            │                        ┌────────────────────┐
-                                 ┌──────────────────────┐            │   LLM Host (FastAPI) │
-                                 │  XGBoost model         │◀──────────│   + Gemini API        │
-                                 │  failure_next_168h     │            └─────────┬──────────┘
+                                            │                          ┌────────────────────┐
+                                 ┌──────────────────────┐              │   LLM Host (FastAPI)│
+                                 │  XGBoost model         │◀────────── │   + Gemini API      │
+                                 │  failure_next_168h     │             └─────────┬──────────┘
                                  └──────────────────────┘                       │
                                                                                  ▼
                                                                        ┌────────────────────┐
@@ -60,8 +60,8 @@ D(t) = (t / Tf) ** alpha
 
 driving noisy synthetic readings for temperature, rotational speed, vibration, pressure, and current. See `degradation_model.py` and `machine.py`.
 
-- `Tf` — machine-specific time-to-failure (cycles), drawn per machine
-- `alpha` — degradation shape factor (< 1 fast-then-plateau, = 1 linear, > 1 slow-then-accelerate)
+- `Tf` : machine-specific time-to-failure (cycles), drawn per machine
+- `alpha` : degradation shape factor (< 1 fast-then-plateau, = 1 linear, > 1 slow-then-accelerate)
 - Five noisy sensor channels are derived from `D(t)`: temperature, rotational speed, vibration, pressure, current
 - A four-tier health status (`healthy` → `warning` → `critical` → `failed`) is assigned per record, with a fixed post-failure logging window before a machine is retired from the simulation (until repair and revival)
 
