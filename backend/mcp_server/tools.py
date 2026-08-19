@@ -2,6 +2,7 @@ from typing import Any
 from datetime import datetime, timezone
 import pandas as pd
 import mcp
+import concurrent.futures
 from ML.predictor import predict_from_sensor_history
 from ML.analysis import compute_sensor_trends
 from database.supabase_client import (
@@ -269,6 +270,14 @@ def register_tools(mcp):
         readings, using only data available up to as_of_timestamp, to estimate
         the probability of failure within the following week.
 
+        For general "how's machine X doing" / "should I worry about X" style
+        questions, prefer get_machine_health_summary instead -- it returns
+        this same prediction plus status, latest reading, and trend
+        information in a single call. Use this tool directly only when you
+        specifically need just the raw prediction (e.g. re-checking at a
+        different as_of_timestamp after already having the rest of the
+        picture).
+
         Args:
             machine_id: The numeric id of the machine.
             as_of_timestamp: Optional ISO 8601 timestamp (e.g. "2025-08-01 00:00:00")
@@ -320,6 +329,109 @@ def register_tools(mcp):
 
         except Exception as e:
             return {"error": str(e)}
+    @mcp.tool()
+    def get_machine_health_summary(
+        machine_id: int,
+        as_of_timestamp: str | None = None,
+        include_failure_modes: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Return a single consolidated health snapshot for one machine: current
+        status, degradation level, latest sensor reading, 168h failure
+        prediction, short-term sensor trend directions, and (if the machine is
+        critical or failed) likely failure modes for its family.
+
+        Use this as the default first call for "how's machine X doing" /
+        "should I worry about machine X" style questions instead of chaining
+        get_machine_details, predict_failure_next_168h, analyze_sensor_trends,
+        and get_failure_modes separately -- this tool does the equivalent work
+        in one call.
+
+        Args:
+            machine_id: The numeric id of the machine to summarize.
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now" for
+                this query. Omit this for "right now" -- it defaults to the
+                current time automatically.
+            include_failure_modes: Whether to include likely failure modes
+                when the machine is in critical or failed status (default
+                True). Set False if you only need the numeric snapshot.
+
+        Returns:
+            A dictionary with status, degradation, latest_reading, prediction,
+            sensor_trends, and (conditionally) likely_failure_modes. Returns
+            {"error": "..."} if the machine or its live state cannot be found.
+        """
+        try:
+            ts = _resolve_timestamp(as_of_timestamp)
+
+            live_state = fetch_machine_live_state(machine_id)
+            if live_state.empty:
+                return {"error": f"No live state found for machine {machine_id}."}
+            current_life_install = live_state.iloc[0]["installation_date"]
+
+            # fetch_* calls are blocking (supabase-py is sync), so run the
+            # two independent ones concurrently in a thread pool instead of
+            # awaiting them one after another.
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                specs_future = pool.submit(fetch_machine_specifications, machine_id)
+                history_future = pool.submit(
+                    fetch_machine_recent_history,
+                    machine_id,
+                    since_timestamp=current_life_install,
+                    as_of_timestamp=ts,
+                    limit=200,
+                )
+                specs_df = specs_future.result()
+                history = history_future.result()
+
+            if history.empty:
+                return {"error": f"No sensor history found for machine {machine_id}."}
+
+            latest = history.iloc[-1]
+            status = latest.get("status", "unknown")
+            degradation = latest.get("degradation")
+
+            prediction = predict_from_sensor_history(
+                sensor_history=history,
+                installation_date=current_life_install,
+            )
+
+            trends = compute_sensor_trends(history, window=168)
+            trend_summary = {
+                sensor: info.get("direction")
+                for sensor, info in trends.items()
+                if isinstance(info, dict)
+            }
+
+            result = {
+                "machine_id": machine_id,
+                "as_of": ts,
+                "status": status,
+                "degradation": round(float(degradation), 4) if degradation is not None else None,
+                "latest_reading": {
+                    "timestamp": str(latest.get("timestamp")),
+                    "temperature": latest.get("temperature"),
+                    "rotational_speed": latest.get("rotational_speed"),
+                    "vibration": latest.get("vibration"),
+                    "pressure": latest.get("pressure"),
+                    "current": latest.get("current"),
+                },
+                "prediction": prediction,
+                "sensor_trends": trend_summary,
+            }
+
+            if include_failure_modes and status in ("critical", "failed") and not specs_df.empty:
+                family = specs_df.iloc[0].get("family")
+                if family:
+                    fm_df = fetch_failure_modes(family)
+                    if not fm_df.empty:
+                        result["likely_failure_modes"] = fm_df.to_dict(orient="records")
+
+            return result
+
+        except Exception as e:
+            return {"error": str(e)}
+
 
     @mcp.tool()
     def get_machine_specifications(machine_id: int) -> dict[str, Any]:

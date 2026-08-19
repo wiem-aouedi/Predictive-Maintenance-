@@ -9,7 +9,7 @@ if (!isSupabaseConfigured) {
   console.warn(
     '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are missing. ' +
     'Using a placeholder client — pages must check isSupabaseConfigured ' +
-    'and fall back to mock data rather than querying live.'
+    'and show an explicit no-data state rather than querying live.'
   )
 }
 

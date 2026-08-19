@@ -1,4 +1,5 @@
 import uuid
+import openai
 from fastapi import APIRouter, HTTPException
 from app.host.llm_host import run_host_turn
 from app.db.conversations import create_conversation, get_conversation, update_conversation
@@ -37,6 +38,11 @@ async def chat(req: ChatRequest):
     trace = []
     try:
         answer, new_messages = await run_host_turn(full_messages, trace)
+    except openai.APIStatusError as e:
+        # Real status from Gemini (rate limits, oversized requests, etc.) -
+        # preserve it instead of flattening everything to 500, so the
+        # frontend can tell "try again in a minute" apart from "broken".
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         import traceback
         traceback.print_exc()

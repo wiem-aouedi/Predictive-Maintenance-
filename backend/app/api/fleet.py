@@ -1,18 +1,14 @@
+import asyncio
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.host.llm_host import call_tool_direct
 
 router = APIRouter()
 
-WATCHLIST_STATUSES = ["critical", "warning"]
-SEVERITY_ORDER = {"critical": 0, "warning": 1}
+AT_RISK_STATUSES = ["critical", "warning"]
 
 
 def _extract_machine_list(result) -> list[dict]:
-    """
-    Normalizes an MCP tool result into a list of machine dicts, regardless
-    of whether the tool returned a bare list or a dict wrapping one.
-    """
     if isinstance(result, list):
         return result
     if isinstance(result, dict):
@@ -21,6 +17,23 @@ def _extract_machine_list(result) -> list[dict]:
             if isinstance(value, list):
                 return value
     return []
+
+
+async def _attach_prediction(machine: dict) -> dict:
+    machine_id = machine.get("id") or machine.get("machine_id")
+    if machine_id is None:
+        machine["failure_probability_percent"] = None
+        return machine
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        result = await call_tool_direct(
+            "predict_failure_next_168h",
+            {"machine_id": machine_id, "as_of_timestamp": now_iso},
+        )
+        machine["failure_probability_percent"] = result.get("failure_probability_percent")
+    except Exception:
+        machine["failure_probability_percent"] = None
+    return machine
 
 
 @router.get("/fleet/health")
@@ -37,16 +50,22 @@ async def fleet_health():
 @router.get("/fleet/watchlist")
 async def fleet_watchlist():
     """
-    Returns machines needing attention: warning/critical (the watchlist)
-    and failed (needs repair) as separate lists, sorted by severity.
+    At-risk machines (warning/critical) are ranked by the model's own
+    failure_probability_percent, not just status label - two "critical"
+    machines can carry very different real risk. Failed machines are NOT
+    re-scored; predicting future failure for an already-failed machine
+    isn't meaningful, so the repair backlog stays fast regardless of size.
     """
     try:
-        watchlist: list[dict] = []
-        for status in WATCHLIST_STATUSES:
+        at_risk: list[dict] = []
+        for status in AT_RISK_STATUSES:
             result = await call_tool_direct("list_machines_by_status", {"status": status})
             for machine in _extract_machine_list(result):
                 machine.setdefault("status", status)
-                watchlist.append(machine)
+                at_risk.append(machine)
+
+        if at_risk:
+            at_risk = list(await asyncio.gather(*(_attach_prediction(m) for m in at_risk)))
 
         failed_result = await call_tool_direct("list_machines_by_status", {"status": "failed"})
         failed = _extract_machine_list(failed_result)
@@ -55,6 +74,12 @@ async def fleet_watchlist():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    watchlist.sort(key=lambda m: SEVERITY_ORDER.get(m.get("status"), 2))
+    def sort_key(m):
+        prob = m.get("failure_probability_percent")
+        if isinstance(prob, (int, float)):
+            return (0, -prob)
+        return (1, 0)
 
-    return {"watchlist": watchlist, "failed": failed}
+    at_risk.sort(key=sort_key)
+
+    return {"watchlist": at_risk, "failed": failed}

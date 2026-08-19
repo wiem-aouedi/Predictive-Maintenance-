@@ -1,91 +1,105 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import {
-  Radio,
-  TrendingUp,
-  Server,
-  Brain,
-  ArrowRight,
-  LayoutDashboard,
-  Bot,
-  ChevronRight,
-  Cpu,
-  Workflow,
-  ListChecks,
-  Activity,
-} from 'lucide-react'
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ReferenceLine,
+} from 'recharts'
 
-const ROTATING_WORDS = ['predictions.', 'decisions.', 'recommendations.', 'reliability.']
-
-const PIPELINE_STAGES = [
-  {
-    id: 'telemetry',
-    title: 'Sensor Telemetry',
-    icon: Radio,
-    summary: 'Simulated sensors stream live readings for a 100-machine fleet.',
-    detail:
-      'A power-law degradation model drives synthetic temperature, rotational speed, vibration, pressure and current readings for every machine, logged on a fixed cycle interval. Because the dataset is fully self-generated rather than drawn from a public benchmark, ground-truth degradation state is always known.',
-  },
-  {
-    id: 'prediction',
-    title: 'Failure Prediction',
-    icon: TrendingUp,
-    summary: 'A trained XGBoost model estimates failure probability over the next 168 hours.',
-    detail:
-      'Sixty engineered features, including rolling statistics, degradation trends and machine age, feed a gradient-boosted classifier trained on a frozen, leakage-checked dataset. The model is exposed to the agent as a callable tool, one source of evidence among several it can draw on.',
-  },
-  {
-    id: 'mcp',
-    title: 'MCP Server',
-    icon: Server,
-    summary: 'A custom FastMCP server exposes fleet data and predictions as callable tools.',
-    detail:
-      'Retrieval tools, a trend-analysis tool, and the prediction tool are exposed over the Model Context Protocol, giving the agent structured, leakage-safe access to live fleet data and the trained model through a single consistent interface.',
-  },
-  {
-    id: 'agent',
-    title: 'LLM Agent Reasoning',
-    icon: Brain,
-    summary: 'An LLM orchestrates tool calls to answer questions and recommend maintenance actions.',
-    detail:
-      'Given a question, the agent decides which tools to call, in what order, and synthesizes the results, including the prediction model\'s output when relevant, into a grounded, explained answer with concrete recommendations.',
-  },
+const ROTATING_PHRASES = [
+  'before it happens.',
+  'before it costs you.',
+  'with real evidence.',
+  'in plain language.',
 ]
 
 const STATS = [
   { label: 'Simulated Machines', value: '120' },
   { label: 'Engineered Features', value: '60' },
-  { label: 'MCP Tools Exposed', value: '14' },
+  { label: 'MCP Tools Exposed', value: '15' },
   { label: 'Sensors Monitored', value: '5' },
   { label: 'Prediction Horizon', value: '168h' },
 ]
 
-const CAPABILITIES = [
+const ZONES = [
   {
-    title: 'Fleet Dashboard',
-    description: 'Live telemetry, health scores, and failure probability for every machine.',
-    icon: LayoutDashboard,
-    to: '/dashboard',
+    label: 'Healthy',
+    tagClass: 'bg-emerald-500/15 text-emerald-300',
+    description: 'Degradation below 50%. Normal telemetry, no flags raised.',
   },
   {
-    title: 'Watchlist',
-    description: 'Machines needing attention, ranked by severity, one click from the agent.',
-    icon: ListChecks,
-    to: '/watchlist',
+    label: 'Warning',
+    tagClass: 'bg-amber-500/15 text-amber-300',
+    description: "Engineered trend features cross rolling-stat thresholds; the machine appears on the Watchlist.",
   },
   {
-    title: 'AI Assistant',
-    description: 'Ask questions in plain language, backed by live data and a full tool trace.',
-    icon: Bot,
-    to: '/assistant',
+    label: 'Critical',
+    tagClass: 'bg-orange-500/15 text-orange-300',
+    description: 'Failure probability rises sharply; the agent recommends an inspection window.',
   },
   {
-    title: 'Machine Detail',
-    description: 'Full sensor history, prediction, and an embedded agent for one machine.',
-    icon: Activity,
-    to: '/dashboard',
+    label: 'Failed',
+    tagClass: 'bg-red-500/15 text-red-300',
+    description: 'Functional failure reached. Readings continue briefly for post-failure labeling.',
   },
 ]
+
+const MCP_TOOLS = [
+  {
+    category: 'Fleet Overview',
+    title: 'Fleet Health Summary',
+    description: 'Aggregates live status across every machine into a single leakage-safe snapshot the agent can reason from.',
+    tags: ['Live data', 'As-of timestamp', 'Read-only'],
+  },
+  {
+    category: 'Machine Detail',
+    title: 'Machine & Sensor Lookup',
+    description: "Pulls full sensor history for one machine, bounded by an as-of timestamp guard so the agent never sees data from the future.",
+    tags: ['Leakage-safe', 'Per-machine', 'Time-bounded'],
+  },
+  {
+    category: 'Fleet Filtering',
+    title: 'Status-Based Listing',
+    description: 'Lists every machine currently in a given health state, the same query the Watchlist page runs directly.',
+    tags: ['Warning', 'Critical', 'Failed'],
+  },
+  {
+    category: 'Trend Analysis',
+    title: 'Sensor Trend Analysis',
+    description: "Computes rolling statistics and slope over a machine's recent readings, the signal used to flag early degradation.",
+    tags: ['Rolling stats', 'Slope', 'Early signal'],
+  },
+  {
+    category: 'Predictive Model',
+    title: '168-Hour Failure Prediction',
+    description: 'Calls the trained XGBoost classifier directly, one tool among several, not a separate competing system.',
+    tags: ['XGBoost', 'Threshold-tuned', '168h horizon'],
+  },
+  {
+    category: 'Knowledge Base',
+    title: 'Maintenance Documentation Search',
+    description: "Retrieves grounded passages from technical manuals so recommendations cite real guidance, not guesses.",
+    tags: ['RAG', 'Grounded', 'Retrieval'],
+  },
+]
+
+function buildDegradationCurve(points = 60, Tf = 6000, alpha = 2.2) {
+  const curve = []
+  for (let i = 0; i <= points; i += 1) {
+    const t = (i / points) * Tf * 1.02
+    const raw = Math.pow(t / Tf, alpha)
+    const degradation = Math.min(1, raw)
+    curve.push({ t: Math.round(t), degradation: Number(degradation.toFixed(4)) })
+  }
+  return curve
+}
+
+const DEGRADATION_CURVE = buildDegradationCurve()
 
 function Reveal({ children, className = '' }) {
   const ref = useRef(null)
@@ -114,62 +128,52 @@ function Reveal({ children, className = '' }) {
   )
 }
 
-function RotatingWord() {
+function RotatingLine() {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % ROTATING_WORDS.length)
-    }, 2400)
+      setIndex((prev) => (prev + 1) % ROTATING_PHRASES.length)
+    }, 2600)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <span
-      key={index}
-      className="animate-fade-slide inline-block font-display italic text-accent"
-    >
-      {ROTATING_WORDS[index]}
+    <span key={index} className="animate-fade-slide font-editorial italic text-gradient-accent">
+      {ROTATING_PHRASES[index]}
     </span>
   )
 }
 
 export default function LandingPage() {
-  const [activeStageId, setActiveStageId] = useState(PIPELINE_STAGES[0].id)
-  const activeStage = PIPELINE_STAGES.find((stage) => stage.id === activeStageId)
-
   return (
     <div className="bg-white">
-      <section className="relative overflow-hidden bg-accent-dark">
-        <div className="mx-auto max-w-5xl px-4 py-28 text-center sm:px-6 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-white/70">
-            <Cpu className="h-3.5 w-3.5" />
+      <section className="hero-grid relative overflow-hidden bg-accent-dark">
+        <div className="mx-auto max-w-5xl px-4 py-28 sm:px-6 sm:py-32 lg:px-8">
+          <p className="font-mono-data text-xs uppercase tracking-[0.2em] text-accent/80">
             Industrial Predictive Maintenance Platform
-          </span>
-          <h1 className="font-display mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Turn sensor data into
-            <br className="hidden sm:block" />
-            <RotatingWord />
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-white/60">
-           An LLM agent that doesn't just predict, it reasons. 
-           Wired into live sensor telemetry, maintenance procedures, and a trained failure-prediction model through a
-            custom Model Context Protocol server, it decides for itself which tool the moment calls for.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:bg-accent/90"
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              View Live Dashboard
-            </Link>
+          <h1 className="font-editorial mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+            Every machine tells you
+            <br />
+            <RotatingLine />
+          </h1>
+          <p className="mt-8 max-w-xl text-base text-white/60 sm:text-lg">
+           An LLM agent that doesn't just predict, it reasons. Wired into live sensor telemetry, maintenance procedures,
+            and a trained failure-prediction model through a custom Model Context Protocol server, it decides for itself which tool the moment calls for.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-6">
             <Link
               to="/assistant"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
+              className="shadow-glow-accent inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-accent-dark transition-transform hover:-translate-y-0.5 hover:bg-white/90"
             >
-              <Bot className="h-4 w-4" />
               Launch AI Assistant
+            </Link>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-white/70 hover:text-white"
+            >
+              View Live Dashboard
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -189,106 +193,130 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <Reveal className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="flex items-start gap-4 rounded-xl border border-slate-100 bg-canvas p-6">
-          <Workflow className="mt-1 h-6 w-6 flex-shrink-0 text-accent" />
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent">
-              What this platform is
-            </p>
-            <p className="mt-2 text-lg text-ink">
-              A single agent that reasons over your fleet's live data, calling the tools it needs,
-              including a trained prediction model, to answer questions in plain language and
-              recommend concrete maintenance actions, grounded in what the tools actually return.
-            </p>
-          </div>
-        </div>
-      </Reveal>
-
-      <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 lg:px-8">
-        <Reveal className="text-center">
-          <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-            How the pipeline works
-          </h2>
-          <p className="mt-3 text-muted">
-            Select a stage to see how data flows through the system.
-          </p>
-        </Reveal>
-
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PIPELINE_STAGES.map((stage, index) => {
-            const Icon = stage.icon
-            const isActive = stage.id === activeStageId
-            return (
-              <button
-                key={stage.id}
-                type="button"
-                onClick={() => setActiveStageId(stage.id)}
-                className={`group relative flex flex-col items-start rounded-xl border p-5 text-left ${
-                  isActive
-                    ? 'border-accent bg-accent text-white shadow-lg shadow-accent/20'
-                    : 'border-slate-100 bg-white text-ink hover:border-accent/30 hover:shadow-md'
-                }`}
-              >
-                <span className={`font-mono-data mb-3 text-xs font-semibold ${isActive ? 'text-white/70' : 'text-muted'}`}>
-                  STAGE {index + 1}
-                </span>
-                <Icon className={`mb-3 h-7 w-7 ${isActive ? 'text-white' : 'text-accent'}`} />
-                <p className="font-display text-base font-semibold">{stage.title}</p>
-                <p className={`mt-1 text-sm ${isActive ? 'text-white/80' : 'text-muted'}`}>
-                  {stage.summary}
+      <section className="border-t border-white/5 bg-accent-dark">
+        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-start">
+              <div>
+                <p className="font-mono-data text-xs uppercase tracking-[0.2em] text-accent/80">
+                  The Degradation Model : How The Platform Sees Risk
                 </p>
-                {index < PIPELINE_STAGES.length - 1 && (
-                  <ChevronRight className="absolute -right-3 top-1/2 hidden h-6 w-6 -translate-y-1/2 text-slate-200 lg:block" />
-                )}
-              </button>
-            )
-          })}
-        </div>
+                <h2 className="font-editorial mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl">
+                  Every machine degrades
+                  <br />
+                  <span className="italic text-white/50">quietly, until it doesn't.</span>
+                </h2>
+                <p className="mt-6 text-white/60">
+                  Each simulated machine follows a power-law degradation curve, D(t) = (t / Tf)^alpha,
+                  rising from zero toward failure at its own pace. The platform's four status zones
+                  mark where the tools and the agent start paying closer attention.
+                </p>
 
-        {activeStage && (
-          <div className="mt-6 rounded-xl border border-slate-100 bg-canvas p-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent">
-              {activeStage.title}
-            </p>
-            <p className="mt-2 text-ink">{activeStage.detail}</p>
-          </div>
-        )}
+                <div className="mt-8 space-y-3">
+                  {ZONES.map((zone) => (
+                    <div
+                      key={zone.label}
+                      className="flex items-start gap-4 rounded-lg border border-white/10 bg-white/5 p-4"
+                    >
+                      <span
+                        className={`mt-0.5 flex-shrink-0 rounded px-2 py-0.5 font-mono-data text-[11px] font-semibold uppercase tracking-wide ${zone.tagClass}`}
+                      >
+                        {zone.label}
+                      </span>
+                      <p className="text-sm text-white/60">{zone.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+                <p className="font-mono-data text-xs uppercase tracking-wide text-white/40">
+                  Degradation vs. Time 
+                </p>
+                <div className="mt-4 h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={DEGRADATION_CURVE} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis dataKey="t" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.4)' }} tickFormatter={() => ''} />
+                      <YAxis domain={[0, 1]} tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.4)' }} />
+                      <Line type="monotone" dataKey="degradation" stroke="#5b8dff" strokeWidth={2} dot={false} />
+                      <ReferenceLine y={0.5} stroke="#f59e0b" strokeDasharray="4 3" label={{ value: 'Warning', position: 'insideTopRight', fill: '#f59e0b', fontSize: 10 }} />
+                      <ReferenceLine y={0.8} stroke="#f97316" strokeDasharray="4 3" label={{ value: 'Critical', position: 'insideTopRight', fill: '#f97316', fontSize: 10 }} />
+                      <ReferenceLine y={0.95} stroke="#ef4444" strokeDasharray="4 3" label={{ value: 'Failed', position: 'insideTopRight', fill: '#ef4444', fontSize: 10 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
       </section>
 
-      <section className="border-t border-slate-100 bg-canvas">
+      <section className="bg-canvas">
         <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
-          <Reveal className="text-center">
-            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-              What you can do right now
+          <Reveal>
+            <h2 className="font-editorial text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+              The right tool
+              <br className="hidden sm:block" />
+              <span className="italic text-muted">for every question.</span>
             </h2>
-            <p className="mt-3 text-muted">Four working views into the same live platform.</p>
+            <p className="mt-4 max-w-2xl text-muted">
+              Each MCP tool exposes one narrow, leakage-safe capability. The agent chooses which to
+              call, and in what order, based on what the question actually needs.
+            </p>
           </Reveal>
 
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CAPABILITIES.map((capability) => {
-              const Icon = capability.icon
-              return (
-                <Link
-                  key={capability.title}
-                  to={capability.to}
-                  className="group flex flex-col rounded-xl border border-slate-100 bg-white p-5"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <p className="font-display mt-4 text-base font-semibold text-ink">
-                    {capability.title}
-                  </p>
-                  <p className="mt-1.5 text-sm text-muted">{capability.description}</p>
-                  <span className="mt-4 flex items-center gap-1 text-xs font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100">
-                    Open
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
+          <Reveal className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 sm:grid-cols-2 lg:grid-cols-3">
+            {MCP_TOOLS.map((tool) => (
+              <div key={tool.title} className="bg-white p-6">
+                <p className="font-mono-data text-[11px] font-semibold uppercase tracking-wide text-accent">
+                  {tool.category}
+                </p>
+                <p className="font-editorial mt-2 text-lg font-semibold text-ink">{tool.title}</p>
+                <p className="mt-2 text-sm text-muted">{tool.description}</p>
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {tool.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] text-muted"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="bg-accent-dark">
+        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 lg:px-8">
+          <Reveal>
+            <h2 className="font-editorial text-2xl font-semibold text-white sm:text-3xl">
+              Explore the <span className="italic text-white/50">live platform.</span>
+            </h2>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                to="/dashboard"
+                className="rounded-md border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/watchlist"
+                className="rounded-md border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+              >
+                Watchlist
+              </Link>
+              <Link
+                to="/assistant"
+                className="shadow-glow-accent rounded-md bg-white px-5 py-2.5 text-sm font-medium text-accent-dark transition-transform hover:-translate-y-0.5 hover:bg-white/90"
+              >
+                AI Assistant
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </section>
     </div>

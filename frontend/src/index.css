@@ -5,11 +5,14 @@
   --font-display: "IBM Plex Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --color-canvas: #f5f7fa;
+  --color-canvas: #f6f8ff;
   --color-ink: #101b31;
   --color-muted: #5b6b8c;
-  --color-accent: #2451d6;
+  --color-accent: #2f5fff;
+  --color-accent-light: #5b8dff;
+  --color-glow: #22d3ee;
   --color-accent-dark: #0b1730;
+  --font-editorial: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 body {
@@ -34,12 +37,68 @@ select {
     box-shadow 150ms ease, transform 150ms ease;
 }
 
-.rounded-xl.border.border-blue-100.bg-white {
-  transition: box-shadow 200ms ease, transform 200ms ease;
+.card-hover {
+  transition: box-shadow 220ms ease, transform 220ms ease, border-color 220ms ease;
 }
-.rounded-xl.border.border-blue-100.bg-white:hover {
-  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
+.card-hover:hover {
+  box-shadow: 0 14px 32px -8px rgba(16, 27, 49, 0.14), 0 4px 14px -4px rgba(47, 95, 255, 0.16);
   transform: translateY(-2px);
+  border-color: rgba(47, 95, 255, 0.32);
+}
+
+/* Thin, brand-tinted scrollbars for scrollable panels (light + dark surfaces) */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 95, 255, 0.3) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(47, 95, 255, 0.3);
+  border-radius: 999px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(47, 95, 255, 0.48);
+}
+.thin-scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.thin-scrollbar-dark::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scrollbar-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+.thin-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Shimmering skeleton placeholder, used while live data is still loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background-image: linear-gradient(90deg, #e7ebf3 25%, #f4f6fa 37%, #e7ebf3 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.6s ease infinite;
+  border-radius: 0.5rem;
+}
+.skeleton-dark {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(255, 255, 255, 0.12) 37%,
+    rgba(255, 255, 255, 0.06) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.6s ease infinite;
+  border-radius: 0.5rem;
 }
 
 .markdown-body p {
@@ -55,7 +114,7 @@ select {
 .markdown-body h2,
 .markdown-body h3 {
   font-weight: 700;
-  color: #1e3a8a;
+  color: var(--color-accent-dark);
   margin: 0.75em 0 0.4em 0;
 }
 .markdown-body h1 { font-size: 1.15em; }
@@ -72,15 +131,15 @@ select {
   margin-bottom: 0.25em;
 }
 .markdown-body code {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #eef3ff;
+  color: var(--color-accent);
   padding: 0.1em 0.35em;
   border-radius: 0.25em;
   font-size: 0.85em;
   font-family: var(--font-mono);
 }
 .markdown-body pre {
-  background: #0f172a;
+  background: var(--color-accent-dark);
   color: #e2e8f0;
   padding: 0.75em;
   border-radius: 0.5em;
@@ -110,13 +169,13 @@ select {
   font-weight: 600;
 }
 .markdown-body a {
-  color: #2563eb;
+  color: var(--color-accent);
   text-decoration: underline;
 }
 .markdown-body blockquote {
-  border-left: 3px solid #93c5fd;
+  border-left: 3px solid var(--color-accent-light);
   padding-left: 0.75em;
-  color: #475569;
+  color: var(--color-muted);
   margin: 0.5em 0;
 }
 @keyframes fadeSlideIn {
@@ -135,4 +194,76 @@ select {
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+.hero-grid {
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(47, 95, 255, 0.4), transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(34, 211, 238, 0.22), transparent 42%),
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: auto, auto, 48px 48px, 48px 48px;
+}
+
+/* Blue-to-cyan brand gradient for standout headline words and a soft
+   accent-tinted glow for primary CTAs sitting on dark surfaces. */
+.text-gradient-accent {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-glow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.shadow-glow-accent {
+  box-shadow: 0 10px 30px -8px rgba(47, 95, 255, 0.45);
+}
+
+/* ---------------------------------------------------------------------
+   Print utilities, for report export via window.print() (no PDF library -
+   the browser's own "Save as PDF" handles rendering). .no-print hides
+   interactive-only chrome; .print-only is the inverse, shown only when
+   printing. Sticky positioning, card shadows, and dark accent-dark
+   surfaces all need explicit overrides here: browsers omit background
+   colors by default (so a dark card would print as white-on-white) and
+   sticky/shadow have no meaning on a paginated printout.
+   --------------------------------------------------------------------- */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+
+  header {
+    display: none !important;
+  }
+
+  .lg\:sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .shadow-sm {
+    box-shadow: none !important;
+  }
+
+  /* bg-accent-dark card (the machine health sidebar) - force it to a
+     plain white card with a light border and dark text instead of
+     trying to preserve the dark theme, which the printer would render
+     as invisible white text on a dropped-out white background. */
+  .print-sidebar {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  .print-sidebar * {
+    color: var(--color-ink) !important;
+    border-color: #e2e8f0 !important;
+  }
+  .print-sidebar svg text {
+    fill: var(--color-ink) !important;
+  }
 }

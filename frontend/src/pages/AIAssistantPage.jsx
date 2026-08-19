@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Sparkles,
 } from 'lucide-react'
+import { useToast } from '../components/Toast'
 
 const QUICK_PROMPTS = [
   'Give me the fleet health summary',
@@ -35,6 +36,26 @@ function formatConversationDate(isoString) {
   return new Date(isoString).toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
+function friendlyError(status, detail) {
+  const text = (detail || '').toLowerCase()
+  const isRateLimit = status === 429 || /\btpm\b|\btpd\b|tokens per (minute|day)/.test(text)
+  const isTooLarge = status === 413 || text.includes('reduce your message size')
+
+  if (isRateLimit) {
+    return "The assistant is at capacity right now (rate limit reached). Please wait a minute and try again."
+  }
+  if (isTooLarge) {
+    return 'This conversation has grown too large for one request. Start a new conversation or ask a narrower question.'
+  }
+  if (status === 404) {
+    return 'This conversation may have been deleted. Start a new one.'
+  }
+  if (status >= 500) {
+    return detail || `The backend hit an unexpected error (status ${status}).`
+  }
+  return detail || `The backend returned an unexpected error (status ${status}).`
+}
+
 async function postChat(conversationId, message) {
   const response = await fetch('/api/chat', {
     method: 'POST',
@@ -42,7 +63,14 @@ async function postChat(conversationId, message) {
     body: JSON.stringify({ conversation_id: conversationId, message }),
   })
   if (!response.ok) {
-    throw new Error(`Backend responded with status ${response.status}`)
+    let detail = null
+    try {
+      const body = await response.json()
+      detail = body?.detail
+    } catch {
+      // response body wasn't JSON - fall through with detail = null
+    }
+    throw new Error(friendlyError(response.status, detail))
   }
   return response.json()
 }
@@ -156,7 +184,7 @@ function ChatBubble({ message }) {
         <div
           className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             isUser
-              ? 'rounded-tr-sm bg-accent text-white'
+              ? 'rounded-tr-sm bg-accent text-white shadow-sm'
               : isError
               ? 'rounded-tl-sm border border-red-200 bg-red-50 text-red-700'
               : 'rounded-tl-sm border border-slate-200 bg-white text-ink shadow-sm'
@@ -200,6 +228,7 @@ export default function AIAssistantPage() {
   const [isLoading, setIsLoading] = useState(false)
   const scrollAnchorRef = useRef(null)
   const location = useLocation()
+  const showToast = useToast()
 
   const refreshConversationList = useCallback(async () => {
     setLoadingConversations(true)
@@ -249,7 +278,7 @@ export default function AIAssistantPage() {
         {
           id: createMessageId(),
           role: 'error',
-          content: `Could not reach the assistant backend. ${error.message}`,
+          content: error.message,
         },
       ])
     } finally {
@@ -293,8 +322,10 @@ export default function AIAssistantPage() {
         handleNewConversation()
       }
       refreshConversationList()
+      showToast('Conversation deleted.', 'success')
     } catch (error) {
       setConversationsError(error.message)
+      showToast(`Could not delete conversation. ${error.message}`, 'error')
     }
   }
 
@@ -312,16 +343,20 @@ export default function AIAssistantPage() {
           <button
             type="button"
             onClick={handleNewConversation}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-accent/90"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent/90"
           >
             <Plus className="h-4 w-4" />
             New conversation
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="thin-scrollbar flex-1 overflow-y-auto p-2">
           {loadingConversations && (
-            <p className="px-3 py-2 text-xs text-muted">Loading conversations...</p>
+            <div className="space-y-1.5 p-1">
+              <div className="skeleton h-10 w-full rounded-lg" />
+              <div className="skeleton h-10 w-full rounded-lg" />
+              <div className="skeleton h-10 w-full rounded-lg" />
+            </div>
           )}
           {conversationsError && !loadingConversations && (
             <p className="px-3 py-2 text-xs text-amber-600">
@@ -331,40 +366,46 @@ export default function AIAssistantPage() {
           {!loadingConversations && !conversationsError && conversations.length === 0 && (
             <p className="px-3 py-2 text-xs text-muted">No conversations yet.</p>
           )}
-          {conversations.map((conversation) => (
-            <div
-              key={conversation.id}
-              className={`group mb-1 flex items-center gap-1 rounded-lg pr-1 ${
-                conversation.id === conversationId ? 'bg-accent/10' : 'hover:bg-slate-50'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => handleSelectConversation(conversation.id)}
-                className={`flex flex-1 items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm ${
-                  conversation.id === conversationId ? 'text-accent' : 'text-ink'
+          {conversations.map((conversation) => {
+            const isActive = conversation.id === conversationId
+            return (
+              <div
+                key={conversation.id}
+                className={`group relative mb-1 flex min-w-0 items-center gap-1 rounded-lg pr-1 transition-colors ${
+                  isActive ? 'bg-accent/10' : 'hover:bg-slate-50'
                 }`}
               >
-                <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted" />
-                <span className="flex-1 overflow-hidden">
-                  <span className="block truncate font-medium">
-                    {conversation.title || 'New conversation'}
+                {isActive && (
+                  <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-accent" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleSelectConversation(conversation.id)}
+                  className={`flex min-w-0 flex-1 items-start gap-2 rounded-lg px-3 py-2.5 text-left text-sm ${
+                    isActive ? 'text-accent' : 'text-ink'
+                  }`}
+                >
+                  <MessageSquare className={`mt-0.5 h-4 w-4 flex-shrink-0 ${isActive ? 'text-accent' : 'text-muted'}`} />
+                  <span className="min-w-0 flex-1 overflow-hidden">
+                    <span className="block truncate font-medium">
+                      {conversation.title || 'New conversation'}
+                    </span>
+                    <span className="font-mono-data block text-xs text-muted">
+                      {formatConversationDate(conversation.updated_at)}
+                    </span>
                   </span>
-                  <span className="font-mono-data block text-xs text-muted">
-                    {formatConversationDate(conversation.updated_at)}
-                  </span>
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={(event) => handleDeleteConversation(conversation.id, event)}
-                title="Delete conversation"
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:bg-red-100 hover:text-red-600 group-hover:opacity-100"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => handleDeleteConversation(conversation.id, event)}
+                  title="Delete conversation"
+                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-slate-300 opacity-0 transition-opacity hover:bg-red-100 hover:text-red-600 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )
+          })}
         </div>
       </aside>
 
@@ -378,7 +419,7 @@ export default function AIAssistantPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl space-y-5">
             {displayMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
