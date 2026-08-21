@@ -7,7 +7,7 @@
     "operation": "24/7",
     "maintenance_strategy": "Predictive Maintenance",
     "monitoring_frequency": "Hourly",
-    "total_machines": 100,
+    "total_machines": 120,
     "sensors": [
         "Temperature",
         "Vibration",

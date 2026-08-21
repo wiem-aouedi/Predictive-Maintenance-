@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Activity, LayoutDashboard, Bot, Home, Menu, X, ListChecks, Waves, Settings } from 'lucide-react'
+import { Activity, LayoutDashboard, Bot, Home, Menu, X, ListChecks, Waves } from 'lucide-react'
 
 const NAV_LINKS = [
   { to: '/', label: 'Overview', icon: Home, end: true },
@@ -87,16 +87,15 @@ function SettingsButton() {
     <NavLink
       to="/settings"
       aria-label="Settings"
-      title="Settings"
       className={({ isActive }) =>
-        `flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border transition-colors ${
+        `flex h-8 flex-shrink-0 items-center justify-center border px-3 text-xs font-medium transition-colors ${
           isActive
             ? 'border-accent/40 bg-accent/15 text-accent'
             : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
         }`
       }
     >
-      <Settings className="h-4 w-4" />
+      Settings
     </NavLink>
   )
 }

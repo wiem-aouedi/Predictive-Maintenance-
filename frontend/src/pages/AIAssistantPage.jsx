@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -15,15 +15,59 @@ import {
   Trash2,
   AlertCircle,
   Sparkles,
+  Database,
+  Clock3,
+  ShieldCheck,
+  FileDown,
 } from 'lucide-react'
 import { useToast } from '../components/Toast'
+import ChartRenderer from '../components/ChartRenderer'
+import { svgToPngDataUrl, slugifyFilename } from '../lib/exportSvgAsPng'
 
 const QUICK_PROMPTS = [
   'Give me the fleet health summary',
   'Analyze Machine-004 vibration trend',
   'Which machines need urgent attention?',
-  'Check recent maintenance logs',
+  'Show the maintenance tasks for Machine-004',
 ]
+
+const GENERAL_FOLLOW_UPS = [
+  'Which machines need urgent attention right now?',
+  'Which machine should be inspected first, and why?',
+  'Summarize the current fleet health with supporting evidence',
+  'Are any sensor readings stale or unavailable?',
+  'What evidence supports the highest-risk prediction?',
+  'Which maintenance actions are supported by the available data?',
+]
+
+function normalizeQuestion(value) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function buildSuggestedQuestions(messages) {
+  const asked = new Set(
+    messages
+      .filter((message) => message.role === 'user')
+      .map((message) => normalizeQuestion(message.content || ''))
+  )
+  const latestAssistant = [...messages].reverse().find((message) => message.role === 'assistant')
+  const machineId = latestAssistant?.provenance?.machine_ids?.[0]
+  const machineLabel = machineId ? `Machine-${String(machineId).padStart(3, '0')}` : null
+  const contextual = machineLabel
+    ? [
+        `Explain the main risk drivers for ${machineLabel}`,
+        `Compare ${machineLabel}'s latest readings with its family thresholds`,
+        `What maintenance tasks are recommended for ${machineLabel}?`,
+        `Which spare parts may be needed for ${machineLabel}?`,
+        `How has ${machineLabel}'s condition changed recently?`,
+      ]
+    : []
+
+  return [...contextual, ...GENERAL_FOLLOW_UPS]
+    .filter((question, index, all) => all.indexOf(question) === index)
+    .filter((question) => !asked.has(normalizeQuestion(question)))
+    .slice(0, 4)
+}
 
 function createMessageId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -157,9 +201,87 @@ function ToolTracePanel({ trace }) {
   )
 }
 
-function ChatBubble({ message }) {
+function EvidencePanel({ provenance }) {
+  if (!provenance || provenance.tools?.length === 0) return null
+  const freshness = {
+    current: { label: 'Current data', style: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+    stale: { label: 'Stale data', style: 'border-amber-200 bg-amber-50 text-amber-700' },
+    future: { label: 'Simulated future time', style: 'border-violet-200 bg-violet-50 text-violet-700' },
+    unknown: { label: 'Freshness unknown', style: 'border-slate-200 bg-slate-50 text-muted' },
+  }[provenance.freshness || 'unknown']
+  const modelLabel = [provenance.model_name, provenance.model_version].filter(Boolean).join(' · ')
+
+  return (
+    <div className="mt-2 w-full rounded-lg border border-slate-200 bg-white p-3 text-xs text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 font-semibold text-ink">
+          <ShieldCheck className="h-3.5 w-3.5 text-accent" /> Evidence used
+        </span>
+        <span className={`rounded-full border px-2 py-0.5 font-medium ${freshness.style}`}>{freshness.label}</span>
+      </div>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <div className="flex items-start gap-1.5">
+          <Database className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+          <span><span className="font-medium text-ink">Sources:</span> {provenance.tools.join(', ')}</span>
+        </div>
+        {provenance.latest_data_timestamp && (
+          <div className="flex items-start gap-1.5">
+            <Clock3 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+            <span><span className="font-medium text-ink">Latest evidence:</span> {new Date(provenance.latest_data_timestamp).toLocaleString()}</span>
+          </div>
+        )}
+        {provenance.machine_ids?.length > 0 && (
+          <div><span className="font-medium text-ink">Machines:</span> {provenance.machine_ids.map((id) => `Machine-${String(id).padStart(3, '0')}`).join(', ')}</div>
+        )}
+        {modelLabel && <div><span className="font-medium text-ink">Model:</span> {modelLabel}</div>}
+      </div>
+      {provenance.tool_errors?.length > 0 && (
+        <div className="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-amber-800">
+          Partial evidence: {provenance.tool_errors.join(' | ')}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ChatBubble({ message, precedingQuestion }) {
   const isUser = message.role === 'user'
   const isError = message.role === 'error'
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const chartNodesRef = useRef({})
+  const showToast = useToast()
+
+  async function handleDownloadPdf() {
+    if (isExportingPdf) return
+    setIsExportingPdf(true)
+    try {
+      const chartImages = []
+      for (let index = 0; index < (message.charts?.length || 0); index += 1) {
+        const svg = chartNodesRef.current[index]?.querySelector('svg')
+        if (!svg) continue
+        const dataUrl = await svgToPngDataUrl(svg)
+        chartImages.push({ title: message.charts[index].title, dataUrl })
+      }
+      // jsPDF + html2canvas are ~600KB combined -- loaded on demand so the
+      // chat page's initial bundle doesn't carry that weight for every
+      // visitor who never exports a PDF.
+      const { exportMessagePdf } = await import('../lib/exportMessagePdf')
+      await exportMessagePdf({
+        question: precedingQuestion || null,
+        answer: message.content,
+        chartImages,
+        provenance: message.provenance,
+        filename: slugifyFilename(
+          `ai-assistant-report-${new Date().toISOString().slice(0, 10)}`,
+          'pdf'
+        ),
+      })
+    } catch (error) {
+      showToast(`Could not generate PDF. ${error.message}`, 'error')
+    } finally {
+      setIsExportingPdf(false)
+    }
+  }
 
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -198,7 +320,34 @@ function ChatBubble({ message }) {
             </div>
           )}
         </div>
-        {!isUser && !isError && <ToolTracePanel trace={message.trace} />}
+        {!isUser && !isError && (
+          <div className="w-full">
+            {message.charts?.map((chart, index) => (
+              <ChartRenderer
+                key={`${chart.title}-${index}`}
+                chart={chart}
+                registerNode={(node) => {
+                  chartNodesRef.current[index] = node
+                }}
+              />
+            ))}
+            <EvidencePanel provenance={message.provenance} />
+            <ToolTracePanel trace={message.trace} />
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isExportingPdf}
+              className="no-print mt-2 flex items-center gap-1.5 text-xs font-medium text-muted hover:text-accent disabled:cursor-wait disabled:opacity-60"
+            >
+              {isExportingPdf ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileDown className="h-3.5 w-3.5" />
+              )}
+              {isExportingPdf ? 'Generating PDF...' : 'Download PDF report'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -227,8 +376,13 @@ export default function AIAssistantPage() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const scrollAnchorRef = useRef(null)
+  const composerRef = useRef(null)
   const location = useLocation()
   const showToast = useToast()
+  const suggestedQuestions = useMemo(
+    () => buildSuggestedQuestions(displayMessages),
+    [displayMessages]
+  )
 
   const refreshConversationList = useCallback(async () => {
     setLoadingConversations(true)
@@ -250,6 +404,13 @@ export default function AIAssistantPage() {
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [displayMessages, isLoading])
+
+  useEffect(() => {
+    const composer = composerRef.current
+    if (!composer) return
+    composer.style.height = 'auto'
+    composer.style.height = `${composer.scrollHeight}px`
+  }, [inputValue])
 
   useEffect(() => {
     if (location.state?.prefill) {
@@ -337,8 +498,8 @@ export default function AIAssistantPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-canvas">
-      <aside className="hidden w-72 flex-shrink-0 flex-col border-r border-slate-200 bg-white sm:flex">
+    <div className="ai-assistant-shell flex h-[calc(100vh-64px)] bg-canvas">
+      <aside className="no-print hidden w-72 flex-shrink-0 flex-col border-r border-slate-200 bg-white sm:flex">
         <div className="border-b border-slate-200 p-4">
           <button
             type="button"
@@ -410,7 +571,7 @@ export default function AIAssistantPage() {
       </aside>
 
       <div className="flex flex-1 flex-col">
-        <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <div className="no-print border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
             <h1 className="font-display text-lg font-bold text-ink">AI Assistant</h1>
             <p className="text-xs text-muted">
@@ -419,7 +580,7 @@ export default function AIAssistantPage() {
           </div>
         </div>
 
-        <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="chat-scroll thin-scrollbar flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl space-y-5">
             {displayMessages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -447,20 +608,28 @@ export default function AIAssistantPage() {
               </div>
             )}
 
-            {displayMessages.map((message) => (
-              <ChatBubble key={message.id} message={message} />
-            ))}
+            {displayMessages.map((message, index) => {
+              const precedingQuestion =
+                message.role === 'assistant' && displayMessages[index - 1]?.role === 'user'
+                  ? displayMessages[index - 1].content
+                  : null
+              return (
+                <ChatBubble key={message.id} message={message} precedingQuestion={precedingQuestion} />
+              )
+            })}
 
             {isLoading && <TypingIndicator />}
             <div ref={scrollAnchorRef} />
           </div>
         </div>
 
-        <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <div className="no-print border-t border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
-            {displayMessages.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {QUICK_PROMPTS.map((prompt) => (
+            {displayMessages.some((message) => message.role === 'assistant') && suggestedQuestions.length > 0 && (
+              <div className="mb-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">Suggested follow-up questions</p>
+                <div className="flex flex-wrap gap-2">
+                {suggestedQuestions.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
@@ -471,16 +640,18 @@ export default function AIAssistantPage() {
                     {prompt}
                   </button>
                 ))}
+                </div>
               </div>
             )}
             <div className="flex items-end gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20">
               <textarea
+                ref={composerRef}
                 value={inputValue}
                 onChange={(event) => setInputValue(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about fleet health, a specific machine, or a failure prediction..."
                 rows={1}
-                className="max-h-32 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm text-ink placeholder:text-slate-400 focus:outline-none"
+                className="min-h-9 flex-1 resize-none overflow-hidden border-0 bg-transparent px-2 py-1.5 text-sm leading-6 text-ink placeholder:text-slate-400 focus:outline-none"
               />
               <button
                 type="button"

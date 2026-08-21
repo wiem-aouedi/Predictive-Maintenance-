@@ -36,6 +36,7 @@ async function fetchLatestReading(machineId) {
     .from('sensor_data')
     .select('rotational_speed, degradation, vibration, status, timestamp')
     .eq('machine_id', machineId)
+    .lte('timestamp', new Date().toISOString())
     .order('timestamp', { ascending: false })
     .limit(1)
     .single()

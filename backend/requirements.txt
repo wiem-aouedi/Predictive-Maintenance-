@@ -1,5 +1,7 @@
 # MCP Framework
 fastmcp
+fastapi
+uvicorn
 
 # Database
 supabase
@@ -21,5 +23,5 @@ pydantic
 
 # HTTP Client
 httpx
-groq
+openai
 streamlit

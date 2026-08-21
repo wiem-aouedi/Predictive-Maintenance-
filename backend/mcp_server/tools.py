@@ -1,10 +1,11 @@
 from typing import Any
 from datetime import datetime, timezone
+import numpy as np
 import pandas as pd
 import mcp
 import concurrent.futures
 from ML.predictor import predict_from_sensor_history
-from ML.analysis import compute_sensor_trends
+from ML.analysis import compute_sensor_trends, SENSOR_COLUMNS
 from database.supabase_client import (
     fetch_machine_recent_history,
     fetch_machines,
@@ -34,6 +35,60 @@ def _resolve_timestamp(as_of_timestamp: str | None) -> str:
     if as_of_timestamp is not None:
         return as_of_timestamp
     return datetime.now(timezone.utc).isoformat()
+
+
+CHART_MAX_LINE_POINTS = 300
+
+
+def _sensor_label(sensor_name: str) -> str:
+    return sensor_name.replace("_", " ").title()
+
+
+def _machine_label(machine_id: int) -> str:
+    return f"Machine-{int(machine_id):03d}"
+
+
+def _downsample(points: list[dict], max_points: int = CHART_MAX_LINE_POINTS) -> list[dict]:
+    """
+    Evenly thin a point list down to max_points so large windows don't blow
+    up the payload sent to Gemini and the frontend -- the LLM never sees raw
+    chart data either way (only the resulting spec), so this only affects
+    render density, not what gets reasoned over.
+    """
+    if len(points) <= max_points:
+        return points
+    step = len(points) / max_points
+    return [points[int(i * step)] for i in range(max_points)]
+
+
+def _chart_spec(
+    chart_type: str,
+    title: str,
+    x_label: str,
+    y_label: str,
+    series: list[dict],
+    as_of: str | None = None,
+    x_kind: str | None = None,
+) -> dict[str, Any]:
+    """
+    Common shape for every chart tool's return value. "kind": "chart_spec"
+    is the anchor the API layer looks for in tool output to pull charts out
+    of the trace and attach them to the chat message -- chart tools are the
+    only tools that set it.
+    """
+    spec = {
+        "kind": "chart_spec",
+        "chart_type": chart_type,
+        "title": title,
+        "x_label": x_label,
+        "y_label": y_label,
+        "series": series,
+    }
+    if as_of is not None:
+        spec["as_of"] = as_of
+    if x_kind is not None:
+        spec["x_kind"] = x_kind
+    return spec
 
 
 def register_tools(mcp):
@@ -78,15 +133,18 @@ def register_tools(mcp):
             limit: Maximum number of readings to return (default 50).
             as_of_timestamp: Optional ISO 8601 timestamp (e.g. "2025-06-01 00:00:00").
                 If provided, returns the `limit` readings at or before this point
-                in time instead of the machine's latest readings.
+                in time instead of the machine's latest readings. Omit this for
+                "right now" -- it defaults to the current time automatically,
+                same as the other live-fleet tools.
 
         Returns:
             A list of dictionaries, one per sensor reading, containing
             timestamp and all recorded sensor columns.
         """
         try:
+            ts = _resolve_timestamp(as_of_timestamp)
             df = fetch_machine_sensor_history(
-                machine_id, limit=limit, as_of_timestamp=as_of_timestamp
+                machine_id, limit=limit, as_of_timestamp=ts
             )
             if df.empty:
                 return []
@@ -244,13 +302,29 @@ def register_tools(mcp):
         Args:
             machine_id: The numeric id of the machine to analyze.
             window: How many recent readings to include in the trend fit (default 168).
-            as_of_timestamp: Optional point in time to analyze "as of" instead of latest.
+            as_of_timestamp: Optional point in time to analyze "as of" instead of
+                right now. Omit this for "right now" -- it defaults to the
+                current time automatically.
 
         Returns:
             Per-sensor dict with direction, slope, current value, and window stats.
         """
         try:
-            df = fetch_machine_full_history(machine_id, as_of_timestamp=as_of_timestamp)
+            ts = _resolve_timestamp(as_of_timestamp)
+
+            live_state = fetch_machine_live_state(machine_id)
+            if live_state.empty:
+                return {"error": f"No live state found for machine {machine_id}."}
+            current_life_install = live_state.iloc[0]["installation_date"]
+
+            # Scoped to the machine's CURRENT life only, same as
+            # predict_failure_next_168h -- otherwise a revived machine's
+            # pre-failure and post-repair readings get blended together.
+            df = fetch_machine_full_history(
+                machine_id,
+                since_timestamp=current_life_install,
+                as_of_timestamp=ts,
+            )
             if df.empty:
                 return {"error": f"No sensor history found for machine {machine_id}."}
             return compute_sensor_trends(df, window=window)
@@ -575,3 +649,261 @@ def register_tools(mcp):
 
         except Exception as e:
             return [{"error": str(e)}]
+
+    @mcp.tool()
+    def plot_sensor_trend(
+        machine_id: int,
+        sensor_name: str,
+        window: int = 168,
+        as_of_timestamp: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Build a line-chart spec of one sensor's readings over time for a
+        single machine, to visually show a trend instead of just describing
+        it in words.
+
+        Use this when the user asks to "see", "plot", "chart", "graph", or
+        "visualize" a sensor's trend, or when showing the trend over time
+        would make the answer clearer than prose alone. Pair it with
+        analyze_sensor_trends for the numeric slope/direction -- this tool
+        renders the picture, it doesn't replace that analysis.
+
+        Args:
+            machine_id: The numeric id of the machine.
+            sensor_name: One of temperature, rotational_speed, vibration,
+                pressure, current.
+            window: How many of the most recent readings to plot (default
+                168, i.e. ~7 days of hourly data). Clamped to 2-2000; large
+                windows are downsampled for display.
+            as_of_timestamp: Optional point in time to plot up to. Omit for
+                "right now" -- it defaults to the current time automatically.
+
+        Returns:
+            A chart spec dict (kind="chart_spec", chart_type="line") that
+            the interface renders directly -- do not restate its contents
+            in your written answer. Returns {"error": "..."} if the
+            machine, its history, or sensor_name is invalid.
+        """
+        try:
+            if sensor_name not in SENSOR_COLUMNS:
+                return {"error": f"Unknown sensor_name '{sensor_name}'. Must be one of {SENSOR_COLUMNS}."}
+
+            ts = _resolve_timestamp(as_of_timestamp)
+            window = max(2, min(window, 2000))
+
+            live_state = fetch_machine_live_state(machine_id)
+            if live_state.empty:
+                return {"error": f"No live state found for machine {machine_id}."}
+            current_life_install = live_state.iloc[0]["installation_date"]
+
+            df = fetch_machine_full_history(
+                machine_id, since_timestamp=current_life_install, as_of_timestamp=ts
+            )
+            if df.empty or sensor_name not in df.columns:
+                return {"error": f"No sensor history found for machine {machine_id}."}
+
+            recent = df.tail(window)
+            points = [
+                {"x": str(row["timestamp"]), "y": round(float(row[sensor_name]), 4)}
+                for _, row in recent.iterrows()
+                if pd.notna(row[sensor_name])
+            ]
+            if not points:
+                return {"error": f"No {sensor_name} readings available for machine {machine_id}."}
+            points = _downsample(points)
+
+            return _chart_spec(
+                chart_type="line",
+                title=f"{_sensor_label(sensor_name)} trend -- {_machine_label(machine_id)}",
+                x_label="Timestamp",
+                y_label=_sensor_label(sensor_name),
+                series=[{"name": _sensor_label(sensor_name), "points": points}],
+                as_of=ts,
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    @mcp.tool()
+    def plot_sensor_comparison(
+        machine_ids: list[int],
+        sensor_name: str,
+        as_of_timestamp: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Build a bar-chart spec comparing one sensor's latest reading across
+        several machines, to visually rank/compare them instead of listing
+        numbers in prose.
+
+        Use this when the user asks to "compare", "rank", or see machines
+        side by side on one sensor (e.g. "compare vibration on machines 4,
+        7, and 12"). For a single machine's trend over time, use
+        plot_sensor_trend instead.
+
+        Args:
+            machine_ids: The machine ids to compare (1-15 machines; extra
+                ids beyond 15 are ignored).
+            sensor_name: One of temperature, rotational_speed, vibration,
+                pressure, current.
+            as_of_timestamp: Optional point in time defining "latest". Omit
+                for "right now" -- it defaults to the current time
+                automatically.
+
+        Returns:
+            A chart spec dict (kind="chart_spec", chart_type="bar") that the
+            interface renders directly -- do not restate its contents in
+            your written answer. Returns {"error": "..."} if sensor_name is
+            invalid or no machines resolve.
+        """
+        try:
+            if sensor_name not in SENSOR_COLUMNS:
+                return {"error": f"Unknown sensor_name '{sensor_name}'. Must be one of {SENSOR_COLUMNS}."}
+            if not machine_ids:
+                return {"error": "machine_ids must contain at least one machine id."}
+            machine_ids = machine_ids[:15]
+
+            ts = _resolve_timestamp(as_of_timestamp)
+            points = []
+            for mid in machine_ids:
+                hist = fetch_machine_sensor_history(mid, limit=1, as_of_timestamp=ts)
+                if hist.empty or sensor_name not in hist.columns:
+                    continue
+                value = hist.iloc[-1][sensor_name]
+                if pd.isna(value):
+                    continue
+                points.append({"x": _machine_label(mid), "y": round(float(value), 4)})
+
+            if not points:
+                return {"error": f"No {sensor_name} readings found for the given machines as of {ts}."}
+
+            return _chart_spec(
+                chart_type="bar",
+                title=f"{_sensor_label(sensor_name)} comparison",
+                x_label="Machine",
+                y_label=_sensor_label(sensor_name),
+                series=[{"name": _sensor_label(sensor_name), "points": points}],
+                as_of=ts,
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    @mcp.tool()
+    def plot_status_breakdown(as_of_timestamp: str | None = None) -> dict[str, Any]:
+        """
+        Build a bar-chart spec of how many machines are in each status
+        (healthy, warning, critical, failed) as of a given point in time.
+
+        Use this for "fleet health" / "how's the fleet doing" style
+        questions when a visual breakdown would help, alongside
+        get_fleet_health_summary for the numeric summary -- this does not
+        replace that call.
+
+        Args:
+            as_of_timestamp: Optional ISO 8601 timestamp defining "now".
+                Omit for "right now" -- it defaults to the current time
+                automatically.
+
+        Returns:
+            A chart spec dict (kind="chart_spec", chart_type="bar", one bar
+            per status) that the interface renders directly -- do not
+            restate its contents in your written answer. Returns
+            {"error": "..."} on failure.
+        """
+        try:
+            ts = _resolve_timestamp(as_of_timestamp)
+            summary = fetch_fleet_health_summary(ts)
+            if "error" in summary:
+                return summary
+            status_counts = summary.get("status_counts") or {}
+            if not status_counts:
+                return {"error": f"No status data available as of {ts}."}
+
+            order = ["healthy", "warning", "critical", "failed"]
+            points = [
+                {"x": status.capitalize(), "y": int(status_counts[status])}
+                for status in order
+                if status in status_counts
+            ]
+            for status, count in status_counts.items():
+                if status not in order:
+                    points.append({"x": str(status).capitalize(), "y": int(count)})
+
+            return _chart_spec(
+                chart_type="bar",
+                title="Fleet status breakdown",
+                x_label="Status",
+                y_label="Machines",
+                series=[{"name": "Machines", "points": points}],
+                as_of=ts,
+                x_kind="status",
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    @mcp.tool()
+    def plot_sensor_distribution(
+        machine_id: int,
+        sensor_name: str,
+        bins: int = 10,
+        as_of_timestamp: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Build a histogram spec of one sensor's readings across a single
+        machine's life, to show the typical range/spread of values instead
+        of a single number.
+
+        Use this when the user asks about the "distribution", "typical
+        range", "spread", or "how often" a sensor sits at a given level for
+        one machine.
+
+        Args:
+            machine_id: The numeric id of the machine.
+            sensor_name: One of temperature, rotational_speed, vibration,
+                pressure, current.
+            bins: Number of histogram buckets (default 10, clamped 3-30).
+            as_of_timestamp: Optional point in time to include readings up
+                to. Omit for "right now" -- it defaults to the current time
+                automatically.
+
+        Returns:
+            A chart spec dict (kind="chart_spec", chart_type="histogram",
+            one bucket per bin) that the interface renders directly -- do
+            not restate its contents in your written answer. Returns
+            {"error": "..."} on failure.
+        """
+        try:
+            if sensor_name not in SENSOR_COLUMNS:
+                return {"error": f"Unknown sensor_name '{sensor_name}'. Must be one of {SENSOR_COLUMNS}."}
+            bins = max(3, min(bins, 30))
+
+            ts = _resolve_timestamp(as_of_timestamp)
+            live_state = fetch_machine_live_state(machine_id)
+            if live_state.empty:
+                return {"error": f"No live state found for machine {machine_id}."}
+            current_life_install = live_state.iloc[0]["installation_date"]
+
+            df = fetch_machine_full_history(
+                machine_id, since_timestamp=current_life_install, as_of_timestamp=ts
+            )
+            if df.empty or sensor_name not in df.columns:
+                return {"error": f"No sensor history found for machine {machine_id}."}
+
+            values = df[sensor_name].dropna().astype(float).values
+            if len(values) == 0:
+                return {"error": f"No {sensor_name} readings available for machine {machine_id}."}
+
+            counts, edges = np.histogram(values, bins=bins)
+            points = [
+                {"x": f"{edges[i]:.2f}–{edges[i + 1]:.2f}", "y": int(counts[i])}
+                for i in range(len(counts))
+            ]
+
+            return _chart_spec(
+                chart_type="histogram",
+                title=f"{_sensor_label(sensor_name)} distribution -- {_machine_label(machine_id)}",
+                x_label=f"{_sensor_label(sensor_name)} (binned)",
+                y_label="Readings",
+                series=[{"name": "Readings", "points": points}],
+                as_of=ts,
+            )
+        except Exception as e:
+            return {"error": str(e)}

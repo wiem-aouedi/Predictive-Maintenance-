@@ -5,13 +5,13 @@
   --font-display: "IBM Plex Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
 
-  --color-canvas: #f6f8ff;
-  --color-ink: #101b31;
-  --color-muted: #5b6b8c;
-  --color-accent: #2f5fff;
-  --color-accent-light: #5b8dff;
-  --color-glow: #22d3ee;
-  --color-accent-dark: #0b1730;
+  --color-canvas: #f4fbf8;
+  --color-ink: #102a26;
+  --color-muted: #5d746f;
+  --color-accent: #2f8f79;
+  --color-accent-light: #5bb89f;
+  --color-glow: #78d6bd;
+  --color-accent-dark: #123b35;
   --font-editorial: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
@@ -41,9 +41,9 @@ select {
   transition: box-shadow 220ms ease, transform 220ms ease, border-color 220ms ease;
 }
 .card-hover:hover {
-  box-shadow: 0 14px 32px -8px rgba(16, 27, 49, 0.14), 0 4px 14px -4px rgba(47, 95, 255, 0.16);
+  box-shadow: 0 14px 32px -8px rgba(16, 42, 38, 0.14), 0 4px 14px -4px rgba(47, 143, 121, 0.16);
   transform: translateY(-2px);
-  border-color: rgba(47, 95, 255, 0.32);
+  border-color: rgba(47, 143, 121, 0.32);
 }
 
 /* Thin, brand-tinted scrollbars for scrollable panels (light + dark surfaces) */
@@ -197,8 +197,8 @@ select {
 }
 .hero-grid {
   background-image:
-    radial-gradient(circle at 15% 20%, rgba(47, 95, 255, 0.4), transparent 45%),
-    radial-gradient(circle at 85% 75%, rgba(34, 211, 238, 0.22), transparent 42%),
+    radial-gradient(circle at 15% 20%, rgba(47, 143, 121, 0.4), transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(120, 214, 189, 0.22), transparent 42%),
     linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
   background-size: auto, auto, 48px 48px, 48px 48px;
@@ -214,7 +214,7 @@ select {
 }
 
 .shadow-glow-accent {
-  box-shadow: 0 10px 30px -8px rgba(47, 95, 255, 0.45);
+  box-shadow: 0 10px 30px -8px rgba(47, 143, 121, 0.45);
 }
 
 /* ---------------------------------------------------------------------
@@ -249,6 +249,17 @@ select {
 
   .shadow-sm {
     box-shadow: none !important;
+  }
+
+  /* AI Assistant message export: the chat column is normally a fixed-height,
+     scrolled flex panel so only the visible messages are on screen. Printing
+     it as-is would clip the exported message to whatever fit in the
+     viewport, so let both the page shell and the message list grow to their
+     full content height for print instead of scrolling. */
+  .ai-assistant-shell,
+  .chat-scroll {
+    height: auto !important;
+    overflow: visible !important;
   }
 
   /* bg-accent-dark card (the machine health sidebar) - force it to a

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ResponsiveContainer,
@@ -27,6 +27,7 @@ import {
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const HISTORY_POINTS = 48
+const FALLBACK_REFRESH_MS = 60_000
 
 const STATUS_STYLES = {
   healthy: { badge: 'bg-emerald-100 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
@@ -63,6 +64,7 @@ async function fetchHistoryFromSupabase(machineId, limit = HISTORY_POINTS) {
       'machine_id, timestamp, temperature, vibration, rotational_speed, pressure, current, degradation, status, failure'
     )
     .eq('machine_id', machineId)
+    .lte('timestamp', new Date().toISOString())
     .order('timestamp', { ascending: false })
     .limit(limit)
 
@@ -134,6 +136,8 @@ export default function DashboardPage() {
     isSupabaseConfigured ? null : 'Supabase is not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).'
   )
   const [historyError, setHistoryError] = useState(null)
+  const [liveState, setLiveState] = useState(isSupabaseConfigured ? 'connecting' : 'offline')
+  const predictionRefreshRef = useRef(null)
 
   const loadMachines = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -158,9 +162,9 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const loadHistory = useCallback(async (machineId) => {
+  const loadHistory = useCallback(async (machineId, { silent = false } = {}) => {
     if (machineId == null || !isSupabaseConfigured) return
-    setLoadingHistory(true)
+    if (!silent) setLoadingHistory(true)
     setHistoryError(null)
 
     try {
@@ -171,11 +175,13 @@ export default function DashboardPage() {
       setHistory(data)
       setFailureProbability(await fetchFailureProbability(machineId))
     } catch (error) {
-      setHistory([])
-      setFailureProbability(null)
+      if (!silent) {
+        setHistory([])
+        setFailureProbability(null)
+      }
       setHistoryError(error.message || 'No live sensor history found for this machine.')
     } finally {
-      setLoadingHistory(false)
+      if (!silent) setLoadingHistory(false)
     }
   }, [])
 
@@ -186,6 +192,61 @@ export default function DashboardPage() {
   useEffect(() => {
     if (selectedMachineId != null) {
       loadHistory(selectedMachineId)
+    }
+  }, [selectedMachineId, loadHistory])
+
+  useEffect(() => {
+    if (selectedMachineId == null || !isSupabaseConfigured) return undefined
+
+    setLiveState('connecting')
+    const channel = supabase
+      .channel(`dashboard-machine-${selectedMachineId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sensor_data',
+          filter: `machine_id=eq.${selectedMachineId}`,
+        },
+        ({ new: reading }) => {
+          if (!reading?.timestamp) return
+          setHistory((current) => {
+            const next = current.filter((row) => row.timestamp !== reading.timestamp)
+            next.push(reading)
+            next.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            return next.slice(-HISTORY_POINTS)
+          })
+          setHistoryError(null)
+
+          window.clearTimeout(predictionRefreshRef.current)
+          predictionRefreshRef.current = window.setTimeout(async () => {
+            setFailureProbability(await fetchFailureProbability(selectedMachineId))
+          }, 500)
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setLiveState('live')
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setLiveState('reconnecting')
+        if (status === 'CLOSED') setLiveState('offline')
+      })
+
+    const fallbackRefresh = window.setInterval(
+      () => loadHistory(selectedMachineId, { silent: true }),
+      FALLBACK_REFRESH_MS
+    )
+
+    const handleOffline = () => setLiveState('offline')
+    const handleOnline = () => setLiveState((state) => (state === 'live' ? state : 'connecting'))
+    window.addEventListener('offline', handleOffline)
+    window.addEventListener('online', handleOnline)
+
+    return () => {
+      window.clearInterval(fallbackRefresh)
+      window.clearTimeout(predictionRefreshRef.current)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('online', handleOnline)
+      supabase.removeChannel(channel)
     }
   }, [selectedMachineId, loadHistory])
 
@@ -221,6 +282,34 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <div
+              className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium ${
+                liveState === 'live'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : liveState === 'offline'
+                    ? 'border-red-200 bg-red-50 text-red-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700'
+              }`}
+              role="status"
+              aria-live="polite"
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  liveState === 'live'
+                    ? 'bg-emerald-500'
+                    : liveState === 'offline'
+                      ? 'bg-red-500'
+                      : 'animate-pulse bg-amber-500'
+                }`}
+              />
+              {liveState === 'live'
+                ? 'Live data'
+                : liveState === 'reconnecting'
+                  ? 'Reconnecting'
+                  : liveState === 'connecting'
+                    ? 'Connecting'
+                    : 'Offline'}
+            </div>
             <div className="relative">
               {latest && (
                 <span

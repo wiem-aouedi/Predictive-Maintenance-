@@ -95,6 +95,7 @@ async function fetchHistoryFromSupabase(machineId, limit = HISTORY_POINTS) {
       'machine_id, timestamp, temperature, vibration, rotational_speed, pressure, current, degradation, status, failure'
     )
     .eq('machine_id', machineId)
+    .lte('timestamp', new Date().toISOString())
     .order('timestamp', { ascending: false })
     .limit(limit)
 

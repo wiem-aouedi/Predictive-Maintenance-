@@ -56,7 +56,7 @@ function SpotlightRow({ machine, onAskAgent }) {
           </div>
           <div className="mt-4 h-1.5 w-full max-w-[220px] overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500 transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500 transition-all duration-500"
               style={{ width: `${barWidth}%` }}
             />
           </div>

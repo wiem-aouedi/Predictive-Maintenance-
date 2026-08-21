@@ -64,6 +64,7 @@ def tick() -> None:
     """
     state_rows = load_live_state()
     batch = []
+    now = datetime.now(timezone.utc)
 
     for state_row in state_rows:
         if state_row["done"]:
@@ -94,6 +95,9 @@ def tick() -> None:
         for _ in range(cfg.CYCLES_PER_TICK):
             if machine.done:
                 break
+            next_ts = machine.installation_datetime + timedelta(hours=machine.t + 1)
+            if next_ts > now:
+                break  # simulated clock has caught up to real time; wait for a later tick
             was_done = machine.done
             reading = machine.step()
             if machine.done and not was_done:

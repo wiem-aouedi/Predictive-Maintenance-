@@ -230,7 +230,7 @@ A React frontend (dashboard, machine detail view, watchlist, and an AI assistant
 
 ## MCP tools
 
-14 tools are currently registered, grouped by what they're for:
+15 tools are currently registered, grouped by what they're for:
 
 **Fleet & machine queries**
 
